@@ -11,13 +11,25 @@ from datetime import datetime
 
 from app.services.rss_fetcher import fetch_all_rss
 from app.services.gdelt_client import fetch_gdelt_by_regions
+from app.services.database import (
+    init_database,
+    insert_articles,
+    get_articles,
+    get_article_count,
+    get_source_stats,
+    get_unique_source_count,
+    get_last_fetch,
+    log_fetch,
+)
+from app.services.dedup import deduplicate_articles, get_existing_titles_from_db
+from app.services.scheduler import start_scheduler, stop_scheduler
 from app.models import HealthResponse
 
 # ─── APP SETUP ──────────────────────────────────────────────────
 app = FastAPI(
     title="VerifyPulse API",
     description="Real-time news verification and confidence scoring",
-    version="0.1.0",
+    version="0.2.0",
 )
 
 # Allow frontend to connect (Day 5)
@@ -29,10 +41,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ─── IN-MEMORY STORE (replaced with SQLite on Day 2) ───────────
-article_store: list[dict] = []
-last_fetch_time: str | None = None
-
 
 # ─── ROUTES ─────────────────────────────────────────────────────
 @app.get("/", tags=["health"])
@@ -40,21 +48,22 @@ def root():
     """Root endpoint — confirms the API is running."""
     return {
         "app": "VerifyPulse",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "status": "running",
         "docs": "/docs",
+        "database": "SQLite (persistent)",
     }
 
 
 @app.get("/api/health", response_model=HealthResponse, tags=["health"])
 def health_check():
-    """Health check with basic stats."""
-    unique_sources = set(a.get("source_id") for a in article_store)
+    """Health check with stats from database."""
+    last = get_last_fetch()
     return HealthResponse(
         status="ok",
-        total_articles=len(article_store),
-        total_sources=len(unique_sources),
-        last_fetch=last_fetch_time,
+        total_articles=get_article_count(),
+        total_sources=get_unique_source_count(),
+        last_fetch=last["fetched_at"] if last else None,
     )
 
 
@@ -62,66 +71,123 @@ def health_check():
 def trigger_fetch():
     """
     Manually trigger a news fetch from all sources.
-    In Day 2 this becomes automatic with APScheduler.
+    Articles are deduplicated and stored in SQLite.
+    The scheduler also runs this automatically every 15 minutes.
     """
-    global article_store, last_fetch_time
-
-    # Fetch from RSS
+    # Fetch from all sources
     rss_articles = fetch_all_rss()
-
-    # Fetch from GDELT
     gdelt_articles = fetch_gdelt_by_regions()
-
-    # Combine and deduplicate by ID
     all_articles = rss_articles + gdelt_articles
-    seen_ids = set()
-    unique = []
-    for article in all_articles:
-        if article.id not in seen_ids:
-            seen_ids.add(article.id)
-            unique.append(article.model_dump())
 
-    article_store = unique
-    last_fetch_time = datetime.now().isoformat()
+    # Deduplicate against existing database
+    existing_titles = get_existing_titles_from_db()
+    unique, duplicates = deduplicate_articles(all_articles, existing_titles)
+
+    # Store in database
+    result = {"new": 0, "duplicate": 0}
+    if unique:
+        article_dicts = [a.model_dump() for a in unique]
+        result = insert_articles(article_dicts)
+
+    # Log the fetch
+    total_dups = len(duplicates) + result["duplicate"]
+    log_fetch(
+        rss_count=len(rss_articles),
+        gdelt_count=len(gdelt_articles),
+        new=result["new"],
+        duplicate=total_dups,
+    )
 
     return {
         "status": "success",
         "rss_count": len(rss_articles),
         "gdelt_count": len(gdelt_articles),
-        "total_unique": len(unique),
-        "fetched_at": last_fetch_time,
+        "new_articles": result["new"],
+        "duplicates_filtered": total_dups,
+        "total_in_database": get_article_count(),
+        "fetched_at": datetime.now().isoformat(),
     }
 
 
 @app.get("/api/articles", tags=["data"])
-def get_articles(region: str | None = None, limit: int = 50):
+def list_articles(
+    region: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    hours: int | None = None,
+):
     """
-    Get fetched articles, optionally filtered by region.
-    This is a simple Day 1 endpoint — replaced with /api/stories on Day 4.
+    Get articles from database with optional filters.
+
+    - **region**: Filter by region (global, india, east_asia, americas)
+    - **limit**: Max articles to return (default 50)
+    - **offset**: Pagination offset
+    - **hours**: Only articles from the last N hours
     """
-    articles = article_store
-
-    if region:
-        articles = [a for a in articles if a.get("region") == region]
-
-    # Sort by published date (newest first)
-    articles.sort(
-        key=lambda a: a.get("published_at") or "1970-01-01",
-        reverse=True,
-    )
+    articles = get_articles(region=region, limit=limit, offset=offset, hours=hours)
+    total = get_article_count(region=region)
 
     return {
-        "count": len(articles[:limit]),
+        "count": len(articles),
+        "total": total,
         "region": region or "all",
-        "articles": articles[:limit],
+        "articles": articles,
     }
 
 
-# ─── STARTUP ────────────────────────────────────────────────────
+@app.get("/api/sources", tags=["data"])
+def list_sources():
+    """
+    Get all configured sources with credibility scores and article counts.
+    Shows which sources are contributing data.
+    """
+    sources = get_source_stats()
+    return {
+        "count": len(sources),
+        "sources": sources,
+    }
+
+
+@app.get("/api/stats", tags=["data"])
+def get_stats():
+    """
+    Dashboard stats — overview of the entire system.
+    """
+    last = get_last_fetch()
+    return {
+        "total_articles": get_article_count(),
+        "active_sources": get_unique_source_count(),
+        "regions": {
+            "global": get_article_count("global"),
+            "india": get_article_count("india"),
+            "east_asia": get_article_count("east_asia"),
+            "americas": get_article_count("americas"),
+        },
+        "last_fetch": last if last else None,
+    }
+
+
+# ─── STARTUP & SHUTDOWN ────────────────────────────────────────
 @app.on_event("startup")
-async def startup_message():
+async def startup():
+    """Initialize database and start the scheduler."""
     print("\n" + "=" * 50)
-    print("  🔍 VerifyPulse API v0.1.0")
+    print("  🔍 VerifyPulse API v0.2.0")
     print("  📖 Docs: http://localhost:8000/docs")
     print("  🏥 Health: http://localhost:8000/api/health")
     print("=" * 50 + "\n")
+
+    # Initialize SQLite database
+    print("🗄️  Setting up database...")
+    init_database()
+
+    # Start automatic fetching
+    print("⏰ Starting scheduler...")
+    start_scheduler()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    """Clean up on server stop."""
+    stop_scheduler()
+    print("👋 VerifyPulse shut down cleanly")
