@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VerifyPulse — News Verification Dashboard</title>
+    <meta name="description" content="Real-time news verification dashboard that scores breaking news by trustworthiness">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -38,13 +40,14 @@
 
         /* ─── HEADER ─────────────────────────────── */
         .header {
-            background: var(--bg-secondary);
+            background: rgba(17, 24, 39, 0.85);
             border-bottom: 1px solid var(--border);
-            padding: 16px 24px;
+            padding: 14px 24px;
             position: sticky;
             top: 0;
             z-index: 100;
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
         }
         .header-inner {
             max-width: 1280px;
@@ -53,7 +56,6 @@
             align-items: center;
             justify-content: space-between;
             gap: 16px;
-            flex-wrap: wrap;
         }
         .logo {
             display: flex;
@@ -61,14 +63,15 @@
             gap: 10px;
         }
         .logo-icon {
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             background: linear-gradient(135deg, var(--accent), #06b6d4);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 17px;
+            box-shadow: 0 2px 12px rgba(59, 130, 246, 0.25);
         }
         .logo-text {
             font-family: var(--font-display);
@@ -77,14 +80,6 @@
             letter-spacing: -0.5px;
         }
         .logo-text span { color: var(--accent); }
-        .logo-version {
-            font-family: var(--font-display);
-            font-size: 10px;
-            color: var(--text-muted);
-            background: var(--bg-card);
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
 
         .header-stats {
             display: flex;
@@ -115,13 +110,37 @@
             50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
         }
 
+        /* ─── SUMMARY BAR ────────────────────────── */
+        .summary-bar {
+            max-width: 1280px;
+            margin: 16px auto 0;
+            padding: 0 24px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .summary-chip {
+            font-family: var(--font-display);
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .summary-chip .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
         /* ─── FILTERS ────────────────────────────── */
         .filters {
             max-width: 1280px;
-            margin: 20px auto;
+            margin: 12px auto 0;
             padding: 0 24px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
             align-items: center;
         }
@@ -129,7 +148,7 @@
             font-family: var(--font-display);
             font-size: 12px;
             font-weight: 500;
-            padding: 8px 16px;
+            padding: 7px 14px;
             border-radius: 6px;
             border: 1px solid var(--border);
             background: var(--bg-secondary);
@@ -150,13 +169,13 @@
             width: 1px;
             height: 24px;
             background: var(--border);
-            margin: 0 4px;
+            margin: 0 2px;
         }
         .refresh-btn {
             font-family: var(--font-display);
             font-size: 12px;
             font-weight: 500;
-            padding: 8px 16px;
+            padding: 7px 14px;
             border-radius: 6px;
             border: 1px solid var(--accent);
             background: rgba(59, 130, 246, 0.1);
@@ -171,25 +190,35 @@
         /* ─── MAIN LAYOUT ────────────────────────── */
         .main {
             max-width: 1280px;
-            margin: 0 auto;
-            padding: 0 24px 40px;
+            margin: 16px auto 0;
+            padding: 0 24px 60px;
         }
 
         /* ─── STORY CARDS ────────────────────────── */
         .stories-grid {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
         .story-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 10px;
-            padding: 20px;
+            padding: 18px 20px;
             cursor: pointer;
-            transition: all 0.25s;
+            transition: all 0.2s;
             position: relative;
             overflow: hidden;
+            animation: cardIn 0.3s ease both;
+        }
+        .story-card:nth-child(1) { animation-delay: 0ms; }
+        .story-card:nth-child(2) { animation-delay: 40ms; }
+        .story-card:nth-child(3) { animation-delay: 80ms; }
+        .story-card:nth-child(4) { animation-delay: 120ms; }
+        .story-card:nth-child(5) { animation-delay: 160ms; }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .story-card::before {
             content: '';
@@ -212,11 +241,11 @@
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 12px;
+            gap: 14px;
+            margin-bottom: 10px;
         }
         .story-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             line-height: 1.4;
             flex: 1;
@@ -236,7 +265,7 @@
         .story-meta {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 14px;
             flex-wrap: wrap;
         }
         .meta-item {
@@ -249,10 +278,7 @@
         }
         .meta-item .val { color: var(--text-secondary); }
 
-        .source-dots {
-            display: flex;
-            gap: 4px;
-        }
+        .source-dots { display: flex; gap: 3px; }
         .source-dot {
             width: 18px;
             height: 18px;
@@ -289,13 +315,13 @@
         }
         .detail-overlay.open { display: flex; }
         .detail-panel {
-            width: min(600px, 90vw);
+            width: min(620px, 92vw);
             height: 100vh;
             background: var(--bg-secondary);
             border-left: 1px solid var(--border);
             overflow-y: auto;
             padding: 24px;
-            animation: slideIn 0.3s ease;
+            animation: slideIn 0.25s ease;
         }
         @keyframes slideIn {
             from { transform: translateX(100%); }
@@ -303,7 +329,7 @@
         }
         .detail-close {
             font-family: var(--font-display);
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-secondary);
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -311,11 +337,12 @@
             border-radius: 6px;
             cursor: pointer;
             margin-bottom: 20px;
+            transition: all 0.2s;
         }
         .detail-close:hover { color: var(--text-primary); border-color: var(--border-light); }
 
         .detail-title {
-            font-size: 22px;
+            font-size: 21px;
             font-weight: 700;
             line-height: 1.3;
             margin-bottom: 16px;
@@ -331,9 +358,21 @@
             border-radius: 10px;
             margin-bottom: 20px;
         }
-        .score-number {
+        .score-ring {
+            width: 72px;
+            height: 72px;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .score-ring svg { transform: rotate(-90deg); }
+        .score-ring-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-family: var(--font-display);
-            font-size: 36px;
+            font-size: 20px;
             font-weight: 700;
         }
         .score-info { flex: 1; }
@@ -348,30 +387,29 @@
             margin-top: 2px;
         }
 
-        .breakdown-section {
-            margin-bottom: 20px;
-        }
+        .breakdown-section { margin-bottom: 24px; }
         .section-title {
             font-family: var(--font-display);
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
+            letter-spacing: 1.2px;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
         }
 
         .breakdown-bar {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
+            padding: 8px 0;
         }
         .breakdown-label {
             font-size: 13px;
             color: var(--text-secondary);
-            width: 120px;
+            width: 110px;
             flex-shrink: 0;
         }
         .breakdown-track {
@@ -384,7 +422,7 @@
         .breakdown-fill {
             height: 100%;
             border-radius: 3px;
-            transition: width 0.5s ease;
+            transition: width 0.6s ease;
         }
         .breakdown-value {
             font-family: var(--font-display);
@@ -394,40 +432,84 @@
             width: 50px;
             text-align: right;
         }
-
-        .source-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+        .breakdown-detail {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin: -2px 0 4px 120px;
         }
-        .source-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
+
+        /* ─── ARTICLE TIMELINE ───────────────────── */
+        .timeline { position: relative; padding-left: 20px; }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: var(--border);
+        }
+        .timeline-item {
+            position: relative;
+            padding: 10px 14px;
+            margin-bottom: 8px;
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 8px;
+            transition: border-color 0.2s;
         }
-        .source-cred {
-            font-family: var(--font-display);
-            font-size: 11px;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 4px;
+        .timeline-item:hover { border-color: var(--border-light); }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -18px;
+            top: 16px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--border-light);
+            background: var(--bg-secondary);
         }
-        .source-name {
+        .timeline-item:first-child::before {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .timeline-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .timeline-source {
             font-size: 13px;
-            font-weight: 500;
-            flex: 1;
+            font-weight: 600;
         }
-        .source-link {
+        .timeline-cred {
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 3px;
+        }
+        .timeline-time {
+            font-family: var(--font-display);
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+        .timeline-title {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            margin-bottom: 4px;
+        }
+        .timeline-link {
             font-family: var(--font-display);
             font-size: 11px;
             color: var(--accent);
             text-decoration: none;
         }
-        .source-link:hover { text-decoration: underline; }
+        .timeline-link:hover { text-decoration: underline; }
 
         /* ─── LOADING & EMPTY STATES ─────────────── */
         .loading-state, .empty-state {
@@ -436,37 +518,64 @@
             color: var(--text-muted);
         }
         .loading-spinner {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             border: 3px solid var(--border);
             border-top-color: var(--accent);
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 16px;
+            animation: spin 0.7s linear infinite;
+            margin: 0 auto 14px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-icon { font-size: 36px; margin-bottom: 10px; }
+        .empty-text { font-size: 15px; color: var(--text-secondary); margin-bottom: 6px; }
+        .empty-hint { font-size: 13px; color: var(--text-muted); }
+        .empty-hint a { color: var(--accent); }
+        .empty-hint code { color: var(--accent); font-family: var(--font-display); font-size: 12px; }
 
-        .empty-icon {
-            font-size: 40px;
-            margin-bottom: 12px;
+        /* ─── FOOTER ─────────────────────────────── */
+        .footer {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
         }
-        .empty-text {
-            font-size: 15px;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-        .empty-hint {
-            font-size: 13px;
+        .footer-text {
+            font-family: var(--font-display);
+            font-size: 11px;
             color: var(--text-muted);
         }
+        .footer-text a { color: var(--text-secondary); text-decoration: none; }
+        .footer-text a:hover { color: var(--accent); }
 
         /* ─── RESPONSIVE ─────────────────────────── */
-        @media (max-width: 640px) {
-            .header-stats { display: none; }
+        @media (max-width: 768px) {
+            .header-stats { gap: 12px; }
+            .stat-pill:nth-child(n+4) { display: none; }
             .story-top { flex-direction: column; gap: 8px; }
-            .story-title { font-size: 14px; }
+            .confidence-badge { align-self: flex-start; }
             .filters { gap: 6px; }
             .filter-btn { padding: 6px 10px; font-size: 11px; }
+            .detail-panel { padding: 16px; }
+            .detail-title { font-size: 18px; }
+            .breakdown-label { width: 90px; font-size: 12px; }
+            .breakdown-detail { margin-left: 100px; }
+        }
+        @media (max-width: 480px) {
+            .header { padding: 12px 16px; }
+            .header-stats { display: none; }
+            .filters { padding: 0 16px; }
+            .main { padding: 0 16px 40px; }
+            .summary-bar { padding: 0 16px; }
+            .story-card { padding: 14px 16px; }
+            .story-title { font-size: 14px; }
+            .story-meta { gap: 10px; }
+            .filter-divider { display: none; }
         }
     </style>
 </head>
@@ -477,10 +586,7 @@
     <div class="header-inner">
         <div class="logo">
             <div class="logo-icon">🔍</div>
-            <div>
-                <div class="logo-text">Verify<span>Pulse</span></div>
-            </div>
-            <div class="logo-version">v0.4</div>
+            <div class="logo-text">Verify<span>Pulse</span></div>
         </div>
         <div class="header-stats">
             <div class="stat-pill">
@@ -494,11 +600,14 @@
                 Sources: <span class="num" id="stat-sources">--</span>
             </div>
             <div class="stat-pill" id="stat-last-fetch">
-                Last fetch: <span class="num">--</span>
+                Updated: <span class="num">--</span>
             </div>
         </div>
     </div>
 </header>
+
+<!-- ─── SUMMARY BAR ──────────────────────────────────── -->
+<div class="summary-bar" id="summary-bar"></div>
 
 <!-- ─── FILTERS ──────────────────────────────────────── -->
 <div class="filters">
@@ -508,8 +617,8 @@
     <button class="filter-btn" data-region="east_asia">East Asia</button>
     <button class="filter-btn" data-region="americas">Americas</button>
     <div class="filter-divider"></div>
-    <button class="filter-btn active" data-confidence="0">All Trust Levels</button>
-    <button class="filter-btn" data-confidence="60">Verified Only</button>
+    <button class="filter-btn active" data-confidence="0">All Levels</button>
+    <button class="filter-btn" data-confidence="60">Verified+</button>
     <button class="filter-btn" data-confidence="40">Developing+</button>
     <button class="refresh-btn" id="refresh-btn" onclick="loadStories()">↻ Refresh</button>
 </div>
@@ -524,9 +633,20 @@
     </div>
 </main>
 
+<!-- ─── FOOTER ───────────────────────────────────────── -->
+<footer class="footer">
+    <div class="footer-text">
+        VerifyPulse v0.4 — News verification prototype
+    </div>
+    <div class="footer-text">
+        Data: Reuters, AP, BBC, Al Jazeera, NDTV, GDELT ·
+        <a href="http://localhost:8000/docs" target="_blank">API Docs</a>
+    </div>
+</footer>
+
 <!-- ─── DETAIL PANEL ─────────────────────────────────── -->
 <div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
-    <div class="detail-panel" id="detail-panel">
+    <div class="detail-panel" id="detail-panel" onclick="event.stopPropagation()">
         <button class="detail-close" onclick="closeDetail()">← Back to feed</button>
         <div id="detail-content"></div>
     </div>
@@ -539,28 +659,33 @@ let currentRegion = '';
 let currentMinConfidence = 0;
 let allStories = [];
 
-// ─── SOURCE COLORS ─────────────────────────────────────
+// ─── SOURCE CONFIG ─────────────────────────────────────
 const SOURCE_COLORS = {
-    reuters: '#ff6b00',
-    ap_news: '#e4002b',
-    bbc_world: '#bb1919',
-    aljazeera: '#fa9e1c',
-    ndtv: '#e23838',
+    reuters: '#ff6b00', ap_news: '#e4002b', bbc_world: '#bb1919',
+    aljazeera: '#fa9e1c', ndtv: '#e23838',
+};
+const SOURCE_NAMES = {
+    reuters: 'Reuters', ap_news: 'AP News', bbc_world: 'BBC World',
+    aljazeera: 'Al Jazeera', ndtv: 'NDTV',
 };
 
 function getSourceColor(id) {
     if (SOURCE_COLORS[id]) return SOURCE_COLORS[id];
-    // Generate consistent color for GDELT sources
     let hash = 0;
     for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
-    const hue = Math.abs(hash) % 360;
-    return `hsl(${hue}, 50%, 45%)`;
+    return `hsl(${Math.abs(hash) % 360}, 50%, 45%)`;
 }
 
 function getSourceInitials(id) {
-    const map = { reuters: 'R', ap_news: 'AP', bbc_world: 'BB', aljazeera: 'AJ', ndtv: 'ND' };
+    const map = { reuters:'R', ap_news:'AP', bbc_world:'BB', aljazeera:'AJ', ndtv:'ND' };
     if (map[id]) return map[id];
     return id.replace('gdelt_', '').substring(0, 2).toUpperCase();
+}
+
+function getSourceName(id) {
+    if (SOURCE_NAMES[id]) return SOURCE_NAMES[id];
+    if (id.startsWith('gdelt_')) return id.replace('gdelt_', '').replace(/_/g, '.');
+    return id;
 }
 
 // ─── LOAD STATS ────────────────────────────────────────
@@ -571,12 +696,10 @@ async function loadStats() {
         document.getElementById('stat-articles').textContent = data.total_articles || 0;
         document.getElementById('stat-sources').textContent = data.active_sources || 0;
         if (data.last_fetch && data.last_fetch.fetched_at) {
-            const ago = timeAgo(data.last_fetch.fetched_at);
-            document.getElementById('stat-last-fetch').querySelector('.num').textContent = ago;
+            document.getElementById('stat-last-fetch').querySelector('.num').textContent =
+                timeAgo(data.last_fetch.fetched_at);
         }
-    } catch (e) {
-        console.error('Stats error:', e);
-    }
+    } catch (e) { console.error('Stats error:', e); }
 }
 
 // ─── LOAD STORIES ──────────────────────────────────────
@@ -595,14 +718,16 @@ async function loadStories() {
         const data = await res.json();
         allStories = data.stories || [];
 
+        // Update summary bar
+        updateSummary(allStories);
+
         if (allStories.length === 0) {
             grid.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">📭</div>
                     <div class="empty-text">No stories found</div>
                     <div class="empty-hint">
-                        Try fetching news first: go to
-                        <a href="${API_BASE}/docs" target="_blank" style="color:var(--accent)">API Docs</a>
+                        Try fetching news first: <a href="${API_BASE}/docs" target="_blank">API Docs</a>
                         → POST /api/fetch → Execute, then refresh here.
                     </div>
                 </div>`;
@@ -617,7 +742,7 @@ async function loadStories() {
                 <div class="empty-text">Can't connect to VerifyPulse API</div>
                 <div class="empty-hint">
                     Make sure the backend is running:<br>
-                    <code style="color:var(--accent)">python -m uvicorn app.main:app --reload</code>
+                    <code>python -m uvicorn app.main:app --reload</code>
                 </div>
             </div>`;
     } finally {
@@ -626,45 +751,73 @@ async function loadStories() {
     }
 }
 
+// ─── SUMMARY BAR ───────────────────────────────────────
+function updateSummary(stories) {
+    const counts = { Verified: 0, 'Likely Accurate': 0, Developing: 0, Unverified: 0, Disputed: 0 };
+    const colors = { Verified:'var(--verified)', 'Likely Accurate':'var(--likely)',
+        Developing:'var(--developing)', Unverified:'var(--unverified)', Disputed:'var(--disputed)' };
+
+    stories.forEach(s => { if (counts[s.confidence_label] !== undefined) counts[s.confidence_label]++; });
+
+    const bar = document.getElementById('summary-bar');
+    bar.innerHTML = Object.entries(counts)
+        .filter(([, v]) => v > 0)
+        .map(([label, count]) => `
+            <div class="summary-chip" style="background:${colors[label]}15;color:${colors[label]};border:1px solid ${colors[label]}30">
+                <div class="dot" style="background:${colors[label]}"></div>
+                ${count} ${label}
+            </div>
+        `).join('') + `
+            <div class="summary-chip" style="background:var(--bg-secondary);color:var(--text-muted);border:1px solid var(--border)">
+                ${stories.length} total stories
+            </div>`;
+}
+
 // ─── RENDER STORY CARD ─────────────────────────────────
-function renderStoryCard(story, index) {
+function renderStoryCard(story) {
     const color = story.confidence_color || '#5a6a85';
     const sources = (story.source_ids || []).map(id =>
-        `<div class="source-dot" style="background:${getSourceColor(id)}" title="${id}">
-            ${getSourceInitials(id)}
-        </div>`
+        `<div class="source-dot" style="background:${getSourceColor(id)}" title="${getSourceName(id)}">${getSourceInitials(id)}</div>`
     ).join('');
 
-    const regions = (story.regions || []).map(r =>
-        `<span class="region-tag">${r}</span>`
-    ).join(' ');
-
-    const timeStr = story.first_reported ? timeAgo(story.first_reported) : 'unknown';
+    const regions = (story.regions || []).map(r => `<span class="region-tag">${r}</span>`).join(' ');
+    const timeStr = story.first_reported ? timeAgo(story.first_reported) : '';
 
     return `
-        <div class="story-card" style="--card-accent:${color}"
-             onclick="openDetail('${story.cluster_id}')"
-             style="animation-delay:${index * 50}ms">
+        <div class="story-card" style="--card-accent:${color}" onclick="openDetail('${story.cluster_id}')">
             <div class="story-top">
                 <div class="story-title">${escapeHtml(story.title)}</div>
-                <div class="confidence-badge"
-                     style="color:${color};border-color:${color};background:${color}18">
+                <div class="confidence-badge" style="color:${color};border-color:${color};background:${color}15">
                     ${story.confidence_score} · ${story.confidence_label}
                 </div>
             </div>
             <div class="story-meta">
                 <div class="meta-item">
-                    Sources: <span class="val">${story.source_count}</span>
-                    <div class="source-dots">${sources}</div>
+                    <span class="source-dots">${sources}</span>
+                    <span class="val">${story.source_count} source${story.source_count !== 1 ? 's' : ''}</span>
                 </div>
                 <div class="meta-item">
-                    Articles: <span class="val">${story.article_count}</span>
+                    ${story.article_count} article${story.article_count !== 1 ? 's' : ''}
                 </div>
-                <div class="meta-item">
-                    First: <span class="val">${timeStr}</span>
-                </div>
+                ${timeStr ? `<div class="meta-item">${timeStr}</div>` : ''}
                 <div class="meta-item">${regions}</div>
             </div>
+        </div>`;
+}
+
+// ─── SCORE RING SVG ────────────────────────────────────
+function scoreRing(score, color) {
+    const radius = 30;
+    const circ = 2 * Math.PI * radius;
+    const offset = circ - (score / 100) * circ;
+    return `
+        <div class="score-ring">
+            <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="${radius}" fill="none" stroke="var(--border)" stroke-width="5"/>
+                <circle cx="36" cy="36" r="${radius}" fill="none" stroke="${color}" stroke-width="5"
+                    stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round"/>
+            </svg>
+            <div class="score-ring-text" style="color:${color}">${score}</div>
         </div>`;
 }
 
@@ -673,6 +826,7 @@ async function openDetail(clusterId) {
     const overlay = document.getElementById('detail-overlay');
     const content = document.getElementById('detail-content');
     overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
 
     content.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div>Loading detail...</div>`;
 
@@ -689,40 +843,53 @@ async function openDetail(clusterId) {
         const color = story.confidence_color || '#5a6a85';
         const bd = story.scoring_breakdown || {};
 
-        // Scoring breakdown bars
+        // Breakdown bars
         let breakdownHTML = '';
         if (bd.source_count) {
-            const pct = (bd.source_count.points / bd.source_count.max * 100);
-            breakdownHTML += breakdownBar('Source Count', bd.source_count.points, bd.source_count.max, color, `${bd.source_count.value} sources`);
+            breakdownHTML += buildBar('Sources', bd.source_count.points, bd.source_count.max, color, `${bd.source_count.value} independent sources`);
         }
         if (bd.avg_credibility) {
-            const pct = (bd.avg_credibility.points / bd.avg_credibility.max * 100);
-            breakdownHTML += breakdownBar('Credibility', bd.avg_credibility.points, bd.avg_credibility.max, color, `avg ${bd.avg_credibility.value}`);
+            breakdownHTML += buildBar('Credibility', bd.avg_credibility.points, bd.avg_credibility.max, color, `average score: ${bd.avg_credibility.value}/100`);
         }
         if (bd.source_diversity) {
-            breakdownHTML += breakdownBar('Diversity', bd.source_diversity.points, bd.source_diversity.max, color, `${bd.source_diversity.count} types`);
+            breakdownHTML += buildBar('Diversity', bd.source_diversity.points, bd.source_diversity.max, color,
+                `types: ${(bd.source_diversity.types || []).join(', ')}`);
         }
 
-        // Articles / sources list
-        const articles = story.articles || [];
-        const sourcesHTML = articles.map(a => `
-            <div class="source-item">
-                <div class="source-dot" style="background:${getSourceColor(a.source_id)}">
-                    ${getSourceInitials(a.source_id)}
-                </div>
-                <div class="source-name">${escapeHtml(a.source_name || a.source_id)}</div>
-                <div class="source-cred" style="color:${a.credibility_score >= 80 ? 'var(--verified)' : a.credibility_score >= 60 ? 'var(--likely)' : 'var(--developing)'};background:${a.credibility_score >= 80 ? 'rgba(34,197,94,0.1)' : a.credibility_score >= 60 ? 'rgba(132,204,22,0.1)' : 'rgba(234,179,8,0.1)'}">
-                    ${a.credibility_score}
-                </div>
-                <a href="${a.url}" target="_blank" class="source-link">Read →</a>
-            </div>
-        `).join('');
+        // Article timeline
+        const articles = (story.articles || []).sort((a, b) => {
+            const da = a.published_at || a.fetched_at || '';
+            const db = b.published_at || b.fetched_at || '';
+            return da < db ? -1 : da > db ? 1 : 0;
+        });
+
+        const timelineHTML = articles.map((a, i) => {
+            const credColor = a.credibility_score >= 80 ? 'var(--verified)' :
+                a.credibility_score >= 60 ? 'var(--likely)' : 'var(--developing)';
+            const credBg = a.credibility_score >= 80 ? 'rgba(34,197,94,0.1)' :
+                a.credibility_score >= 60 ? 'rgba(132,204,22,0.1)' : 'rgba(234,179,8,0.1)';
+            const time = a.published_at ? timeAgo(a.published_at) : '';
+
+            return `
+                <div class="timeline-item">
+                    <div class="timeline-header">
+                        <div class="source-dot" style="background:${getSourceColor(a.source_id)};width:20px;height:20px;font-size:9px">
+                            ${getSourceInitials(a.source_id)}
+                        </div>
+                        <div class="timeline-source">${escapeHtml(a.source_name || getSourceName(a.source_id))}</div>
+                        <div class="timeline-cred" style="color:${credColor};background:${credBg}">${a.credibility_score}</div>
+                        ${time ? `<div class="timeline-time">${time}</div>` : ''}
+                    </div>
+                    <div class="timeline-title">${escapeHtml(a.title)}</div>
+                    <a href="${a.url}" target="_blank" rel="noopener" class="timeline-link">Read original article →</a>
+                </div>`;
+        }).join('');
 
         content.innerHTML = `
             <div class="detail-title">${escapeHtml(story.title)}</div>
 
             <div class="score-display">
-                <div class="score-number" style="color:${color}">${story.confidence_score}</div>
+                ${scoreRing(story.confidence_score, color)}
                 <div class="score-info">
                     <div class="score-label" style="color:${color}">${story.confidence_label}</div>
                     <div class="score-desc">${story.confidence_description || ''}</div>
@@ -735,8 +902,8 @@ async function openDetail(clusterId) {
             </div>
 
             <div class="breakdown-section">
-                <div class="section-title">Sources (${articles.length} articles)</div>
-                <div class="source-list">${sourcesHTML}</div>
+                <div class="section-title">Source Timeline (${articles.length} articles)</div>
+                <div class="timeline">${timelineHTML}</div>
             </div>
         `;
     } catch (e) {
@@ -744,7 +911,7 @@ async function openDetail(clusterId) {
     }
 }
 
-function breakdownBar(label, points, max, color, detail) {
+function buildBar(label, points, max, color, detail) {
     const pct = Math.round(points / max * 100);
     return `
         <div class="breakdown-bar">
@@ -754,13 +921,13 @@ function breakdownBar(label, points, max, color, detail) {
             </div>
             <div class="breakdown-value">${points}/${max}</div>
         </div>
-        <div style="font-size:11px;color:var(--text-muted);margin:-4px 0 6px 130px">${detail}</div>
-    `;
+        <div class="breakdown-detail">${detail}</div>`;
 }
 
 function closeDetail(e) {
-    if (e && e.target !== document.getElementById('detail-overlay')) return;
+    if (e && e.target.id !== 'detail-overlay') return;
     document.getElementById('detail-overlay').classList.remove('open');
+    document.body.style.overflow = '';
 }
 
 // ─── FILTERS ───────────────────────────────────────────
@@ -772,7 +939,6 @@ document.querySelectorAll('.filter-btn[data-region]').forEach(btn => {
         loadStories();
     });
 });
-
 document.querySelectorAll('.filter-btn[data-confidence]').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.filter-btn[data-confidence]').forEach(b => b.classList.remove('active'));
@@ -783,38 +949,27 @@ document.querySelectorAll('.filter-btn[data-confidence]').forEach(btn => {
 });
 
 // ─── HELPERS ───────────────────────────────────────────
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text || '';
-    return div.innerHTML;
+function escapeHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = t || '';
+    return d.innerHTML;
 }
-
-function timeAgo(dateStr) {
-    if (!dateStr) return 'unknown';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = Math.floor((now - date) / 1000);
+function timeAgo(ds) {
+    if (!ds) return '';
+    const diff = Math.floor((new Date() - new Date(ds)) / 1000);
     if (diff < 60) return 'just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
+    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    return `${Math.floor(diff/86400)}d ago`;
 }
 
-// ─── KEYBOARD SHORTCUT ─────────────────────────────────
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeDetail();
-});
+// ─── KEYBOARD ──────────────────────────────────────────
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
 
 // ─── INIT ──────────────────────────────────────────────
 loadStats();
 loadStories();
-
-// Auto-refresh every 5 minutes
-setInterval(() => {
-    loadStats();
-    loadStories();
-}, 5 * 60 * 1000);
+setInterval(() => { loadStats(); loadStories(); }, 5 * 60 * 1000);
 </script>
-
 </body>
 </html>
