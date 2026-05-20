@@ -8,6 +8,8 @@ Run with: uvicorn app.main:app --reload
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# Add this import at the top with other service imports
+from app.services.clustering import get_model
 from app.routers import stories, data
 from app.services.database import init_database
 from app.services.scheduler import start_scheduler, stop_scheduler
@@ -82,6 +84,7 @@ async def startup():
     print("=" * 50 + "\n")
 
     init_database()
+    get_model()
     start_scheduler()
 
 
