@@ -1,51 +1,47 @@
 """
 VerifyPulse Story Clustering Engine
-Groups related articles about the same event using TF-IDF text similarity.
-This is the core intelligence — it answers "which articles are about the same story?"
+Groups related articles using sentence-transformers semantic embeddings.
+Replaces TF-IDF with all-MiniLM-L6-v2 for paraphrase-aware clustering.
 """
 
 import hashlib
-from datetime import datetime
-from typing import Optional
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
 import numpy as np
 
 from app.services.database import get_db
 
-
-# ─── SETTINGS ───────────────────────────────────────────────────
-# Two articles with >= 0.3 cosine similarity are about the same story.
-# 0.3 is deliberately lenient — catches "India PM visits Japan" and
-# "Modi arrives in Tokyo for bilateral summit" as the same story.
-# Higher threshold = fewer clusters but more precise.
-SIMILARITY_THRESHOLD = 0.30
-
-# Only cluster articles from the last N hours (keeps it fast)
+# ─── SETTINGS ────────────────────────────────────────────────────
+# Semantic similarity threshold — 0.55 is good for MiniLM
+# (higher than TF-IDF threshold because embeddings are denser)
+SIMILARITY_THRESHOLD = 0.55
 CLUSTER_WINDOW_HOURS = 48
+
+# Model loaded once at module level — ~90MB download on first run
+_MODEL: SentenceTransformer | None = None
+
+
+def get_model() -> SentenceTransformer:
+    """Return the singleton embedding model, loading it if needed."""
+    global _MODEL
+    if _MODEL is None:
+        print("  📦 Loading sentence-transformers model (first run only)...")
+        _MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+        print("  ✓ Model loaded")
+    return _MODEL
 
 
 def _generate_cluster_id(titles: list[str]) -> str:
-    """Create a stable cluster ID from the combined titles."""
     combined = "|".join(sorted(titles))
     return "cluster_" + hashlib.md5(combined.encode()).hexdigest()[:10]
 
 
 def _pick_best_title(articles: list[dict]) -> str:
-    """
-    Choose the best headline for a cluster.
-    Prefers titles from high-credibility sources that are medium length
-    (not too short, not too long).
-    """
     if not articles:
         return "Unknown Story"
-
-    # Score each title: credibility + length penalty
     scored = []
     for article in articles:
         title = article.get("title", "")
         cred = article.get("credibility_score", 50)
-        # Ideal title length is 40-100 chars
         length = len(title)
         length_score = 1.0
         if length < 20:
@@ -53,7 +49,6 @@ def _pick_best_title(articles: list[dict]) -> str:
         elif length > 120:
             length_score = 0.7
         scored.append((cred * length_score, title))
-
     scored.sort(reverse=True)
     return scored[0][1]
 
@@ -61,31 +56,15 @@ def _pick_best_title(articles: list[dict]) -> str:
 def cluster_articles(hours: int = CLUSTER_WINDOW_HOURS) -> list[dict]:
     """
     Main clustering function.
-    Fetches recent articles, groups them by similarity, and returns clusters.
-
-    Args:
-        hours: Only consider articles from the last N hours
-
-    Returns:
-        List of cluster dicts, each containing:
-        - cluster_id: unique identifier
-        - title: best representative headline
-        - articles: list of article dicts in this cluster
-        - source_count: number of unique sources
-        - source_ids: list of unique source IDs
-        - regions: list of regions covered
-        - first_reported: earliest publish date
-        - last_updated: latest publish date
+    Fetches recent articles, embeds them with MiniLM, groups by cosine similarity.
     """
-    # Step 1: Fetch recent articles
     articles = _fetch_recent_articles(hours)
     if len(articles) < 2:
-        # Not enough articles to cluster — return each as its own cluster
         return [_single_article_cluster(a) for a in articles]
 
-    print(f"\n🧩 Clustering {len(articles)} articles...")
+    print(f"\n🧩 Clustering {len(articles)} articles (semantic embeddings)...")
 
-    # Step 2: Build TF-IDF matrix from titles + summaries
+    # Build text inputs: title + summary
     texts = []
     for article in articles:
         text = article.get("title", "")
@@ -94,23 +73,19 @@ def cluster_articles(hours: int = CLUSTER_WINDOW_HOURS) -> list[dict]:
             text += " " + summary
         texts.append(text)
 
-    vectorizer = TfidfVectorizer(
-        stop_words="english",
-        max_features=5000,
-        ngram_range=(1, 2),  # unigrams + bigrams for better matching
-    )
+    # Encode all texts to dense vectors
+    model = get_model()
+    embeddings = model.encode(texts, convert_to_numpy=True, show_progress_bar=False)
 
-    try:
-        tfidf_matrix = vectorizer.fit_transform(texts)
-    except ValueError:
-        # All texts are empty or stop words only
-        print("  ⚠ Could not vectorize articles — returning unclustered")
-        return [_single_article_cluster(a) for a in articles]
+    # Normalise for cosine similarity via dot product
+    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+    norms = np.where(norms == 0, 1, norms)  # avoid div-by-zero
+    embeddings = embeddings / norms
 
-    # Step 3: Compute pairwise similarity
-    similarity_matrix = cosine_similarity(tfidf_matrix)
+    # Compute full pairwise similarity matrix
+    similarity_matrix = embeddings @ embeddings.T
 
-    # Step 4: Greedy clustering using similarity threshold
+    # Greedy clustering
     n = len(articles)
     assigned = [False] * n
     clusters = []
@@ -118,35 +93,25 @@ def cluster_articles(hours: int = CLUSTER_WINDOW_HOURS) -> list[dict]:
     for i in range(n):
         if assigned[i]:
             continue
-
-        # Start a new cluster with article i
         cluster_indices = [i]
         assigned[i] = True
-
-        # Find all articles similar to article i
         for j in range(i + 1, n):
-            if assigned[j]:
-                continue
-            if similarity_matrix[i, j] >= SIMILARITY_THRESHOLD:
+            if not assigned[j] and similarity_matrix[i, j] >= SIMILARITY_THRESHOLD:
                 cluster_indices.append(j)
                 assigned[j] = True
-
-        # Build the cluster dict
         cluster_articles_list = [articles[idx] for idx in cluster_indices]
-        cluster = _build_cluster(cluster_articles_list)
-        clusters.append(cluster)
+        clusters.append(_build_cluster(cluster_articles_list))
 
-    # Sort by source count (most corroborated first)
     clusters.sort(key=lambda c: c["source_count"], reverse=True)
 
     print(f"  ✓ Created {len(clusters)} story clusters")
-    print(f"  📊 Largest cluster: {clusters[0]['source_count']} sources" if clusters else "")
+    if clusters:
+        print(f"  📊 Largest cluster: {clusters[0]['source_count']} sources")
 
     return clusters
 
 
 def _fetch_recent_articles(hours: int) -> list[dict]:
-    """Fetch articles from database within the time window."""
     with get_db() as conn:
         rows = conn.execute("""
             SELECT id, title, url, source_id, source_name,
@@ -159,7 +124,6 @@ def _fetch_recent_articles(hours: int) -> list[dict]:
 
 
 def _single_article_cluster(article: dict) -> dict:
-    """Wrap a single article as its own cluster."""
     return {
         "cluster_id": _generate_cluster_id([article.get("title", "")]),
         "title": article.get("title", "Unknown"),
@@ -173,21 +137,9 @@ def _single_article_cluster(article: dict) -> dict:
 
 
 def _build_cluster(articles: list[dict]) -> dict:
-    """Build a cluster dict from a group of related articles."""
     source_ids = list(set(a.get("source_id", "") for a in articles))
     regions = list(set(a.get("region", "global") for a in articles))
-
-    # Find time range
-    dates = []
-    for a in articles:
-        pub = a.get("published_at")
-        if pub:
-            dates.append(pub)
-
-    dates.sort()
-    first = dates[0] if dates else None
-    last = dates[-1] if dates else None
-
+    dates = sorted([a.get("published_at") for a in articles if a.get("published_at")])
     return {
         "cluster_id": _generate_cluster_id([a.get("title", "") for a in articles]),
         "title": _pick_best_title(articles),
@@ -195,16 +147,12 @@ def _build_cluster(articles: list[dict]) -> dict:
         "source_count": len(source_ids),
         "source_ids": source_ids,
         "regions": regions,
-        "first_reported": first,
-        "last_updated": last,
+        "first_reported": dates[0] if dates else None,
+        "last_updated": dates[-1] if dates else None,
     }
 
 
 def save_cluster_assignments(clusters: list[dict]):
-    """
-    Write cluster_id back to the articles table so we can
-    query articles by cluster later.
-    """
     with get_db() as conn:
         for cluster in clusters:
             cluster_id = cluster["cluster_id"]
@@ -215,5 +163,4 @@ def save_cluster_assignments(clusters: list[dict]):
                         "UPDATE articles SET cluster_id = ? WHERE id = ?",
                         (cluster_id, article_id),
                     )
-
     print(f"  💾 Saved cluster assignments for {len(clusters)} clusters")
