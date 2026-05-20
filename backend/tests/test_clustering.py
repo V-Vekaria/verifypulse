@@ -221,12 +221,107 @@ class TestConfidenceScoring:
         assert wire_scored["confidence_score"] > low_scored["confidence_score"]
 
 
+# ─── SEMANTIC CLUSTERING TESTS (Day 1 — sentence-transformers) ──
+class TestSemanticClustering:
+
+    def test_same_story_articles_cluster_together(self):
+        """Articles about same event must land in same cluster."""
+        from unittest.mock import patch
+
+        article_a = {
+            "id": 1, "title": "India PM Modi visits Japan for bilateral summit",
+            "summary": "Prime Minister Modi arrives in Tokyo.",
+            "source_id": "reuters", "source_name": "Reuters",
+            "published_at": "2026-05-20T10:00:00", "region": "asia",
+            "credibility_score": 90, "fetched_at": "2026-05-20T10:00:00",
+            "url": "https://reuters.com/1",
+        }
+        article_b = {
+            "id": 2, "title": "Modi arrives in Tokyo for talks with Japanese PM",
+            "summary": "Indian leader begins bilateral visit.",
+            "source_id": "bbc", "source_name": "BBC",
+            "published_at": "2026-05-20T10:05:00", "region": "asia",
+            "credibility_score": 88, "fetched_at": "2026-05-20T10:05:00",
+            "url": "https://bbc.com/1",
+        }
+        article_c = {
+            "id": 3, "title": "Heavy rain floods streets in London",
+            "summary": "Severe weather hits UK capital.",
+            "source_id": "guardian", "source_name": "Guardian",
+            "published_at": "2026-05-20T10:10:00", "region": "europe",
+            "credibility_score": 85, "fetched_at": "2026-05-20T10:10:00",
+            "url": "https://guardian.com/1",
+        }
+
+        from app.services.clustering import cluster_articles
+        with patch("app.services.clustering._fetch_recent_articles",
+                   return_value=[article_a, article_b, article_c]):
+            clusters = cluster_articles()
+
+        cluster_for_a = next(
+            (c for c in clusters if any(a["id"] == 1 for a in c["articles"])), None
+        )
+        assert cluster_for_a is not None
+        ids_in_cluster = [a["id"] for a in cluster_for_a["articles"]]
+        assert 2 in ids_in_cluster, "Same-story article B must cluster with A"
+        assert 3 not in ids_in_cluster, "Unrelated article C must NOT cluster with A"
+
+    def test_unrelated_articles_split_into_separate_clusters(self):
+        """Two unrelated articles must produce two clusters."""
+        from unittest.mock import patch
+
+        article_a = {
+            "id": 1, "title": "NASA launches new moon mission",
+            "summary": "Artemis rocket lifts off from Kennedy Space Center.",
+            "source_id": "reuters", "source_name": "Reuters",
+            "published_at": "2026-05-20T10:00:00", "region": "global",
+            "credibility_score": 90, "fetched_at": "2026-05-20T10:00:00",
+            "url": "https://reuters.com/1",
+        }
+        article_b = {
+            "id": 2, "title": "Heavy rain floods streets in London",
+            "summary": "Severe weather hits UK capital.",
+            "source_id": "bbc", "source_name": "BBC",
+            "published_at": "2026-05-20T10:05:00", "region": "europe",
+            "credibility_score": 88, "fetched_at": "2026-05-20T10:05:00",
+            "url": "https://bbc.com/1",
+        }
+
+        from app.services.clustering import cluster_articles
+        with patch("app.services.clustering._fetch_recent_articles",
+                   return_value=[article_a, article_b]):
+            clusters = cluster_articles()
+
+        assert len(clusters) == 2, f"Expected 2 clusters, got {len(clusters)}"
+
+    def test_single_article_returns_one_cluster(self):
+        """Edge case: single article becomes its own cluster without crashing."""
+        from unittest.mock import patch
+
+        article_a = {
+            "id": 1, "title": "NASA launches new moon mission",
+            "summary": "Artemis rocket lifts off from Kennedy Space Center.",
+            "source_id": "reuters", "source_name": "Reuters",
+            "published_at": "2026-05-20T10:00:00", "region": "global",
+            "credibility_score": 90, "fetched_at": "2026-05-20T10:00:00",
+            "url": "https://reuters.com/1",
+        }
+
+        from app.services.clustering import cluster_articles
+        with patch("app.services.clustering._fetch_recent_articles",
+                   return_value=[article_a]):
+            clusters = cluster_articles()
+
+        assert len(clusters) == 1
+        assert clusters[0]["source_count"] == 1
+
+
 # ─── RUN TESTS ──────────────────────────────────────────────────
 if __name__ == "__main__":
     print("Running VerifyPulse Tests...\n")
 
     # Simple test runner (works without pytest too)
-    test_classes = [TestClustering, TestConfidenceScoring]
+    test_classes = [TestClustering, TestConfidenceScoring, TestSemanticClustering]
     passed = 0
     failed = 0
 
