@@ -85,3 +85,10 @@ REGION_QUERIES = {
 FETCH_INTERVAL_MINUTES = 15  # how often to pull new articles
 DATABASE_PATH = "verifypulse.db"
 MAX_ARTICLES_PER_FETCH = 100
+
+# ─── CLUSTERING SETTINGS ────────────────────────────────────────
+# Semantic similarity threshold for MiniLM embeddings
+# 0.55 = balanced (misses fewer related stories)
+# 0.65 = stricter (fewer false positives)
+CLUSTER_SIMILARITY_THRESHOLD = 0.55
+CLUSTER_WINDOW_HOURS = 48

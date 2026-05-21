@@ -45,6 +45,10 @@ def score_cluster(cluster: dict) -> dict:
     if not articles:
         return _apply_score(cluster, 0.0, {})
 
+    # Guard: single-source clusters capped at "Unverified" max (39pts)
+    # Prevents one high-credibility source inflating score to "Verified"
+    is_single_source = len(source_ids) <= 1
+
     # ── FACTOR 1: Source Count (0-40 points) ────────────────────
     # 1 source = 5pts, 2 = 15pts, 3 = 25pts, 4 = 32pts, 5+ = 40pts
     # Diminishing returns — going from 1→2 sources matters more than 4→5
@@ -71,6 +75,10 @@ def score_cluster(cluster: dict) -> dict:
     # ── FINAL SCORE ─────────────────────────────────────────────
     raw_score = source_count_points + credibility_points + diversity_points
     final_score = min(100.0, max(0.0, raw_score))
+
+    # Single-source hard cap: max 39 (top of "Unverified" band)
+    if is_single_source:
+        final_score = min(final_score, 39.0)
 
     breakdown = {
         "source_count": {
