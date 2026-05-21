@@ -20,6 +20,10 @@ env/
 .DS_Store
 Thumbs.db
 
+# Server log redirects (created by start.bat / manual launches)
+server.log
+server.err
+
 # Environment
 .env
 .env.local
