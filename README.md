@@ -20,8 +20,8 @@ VerifyPulse aggregates news from multiple independent sources, clusters related 
   └────────┬────────┘
            ▼
   ┌─────────────────┐
-  │  CLUSTERING      │  TF-IDF + cosine similarity groups
-  │  ENGINE          │  related articles into story clusters
+  │  CLUSTERING      │  MiniLM embeddings + cosine similarity
+  │  ENGINE          │  groups related articles into clusters
   └────────┬────────┘
            ▼
   ┌─────────────────┐
@@ -64,9 +64,9 @@ The combined score maps to a confidence label:
 
 | Layer | Technology | Cost |
 |-------|-----------|------|
-| Backend | Python 3.11 + FastAPI | Free |
+| Backend | Python 3.10+ + FastAPI | Free |
 | Database | SQLite (WAL mode) | Free |
-| NLP | scikit-learn TF-IDF | Free |
+| NLP | sentence-transformers (MiniLM) | Free |
 | Data Sources | RSS feeds + GDELT API | Free |
 | Frontend | Vanilla HTML/CSS/JS | Free |
 | Fonts | DM Sans + IBM Plex Mono | Free |
@@ -82,13 +82,28 @@ The combined score maps to a confidence label:
 ### Backend
 ```bash
 cd backend
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# macOS / Linux
+source venv/bin/activate
+
 pip install -r requirements.txt
 python -m uvicorn app.main:app --reload
 ```
 
 The API starts at http://localhost:8000 with auto-generated docs at http://localhost:8000/docs.
 
-On first run, it creates a SQLite database and begins fetching news automatically every 15 minutes.
+On first run, it downloads the MiniLM embedding model (~90 MB), creates a SQLite database, and begins fetching news automatically every 15 minutes.
+
+**Windows users:** if you see a `UnicodeEncodeError` on startup, run with `set PYTHONUTF8=1` before the uvicorn command, or just use `start.bat` which handles this automatically.
+
+### Windows shortcut
+```
+# From the project root, just double-click:
+start.bat
+```
+This creates the venv and installs dependencies automatically on first run.
 
 ### Frontend
 ```bash
@@ -148,7 +163,7 @@ verifypulse/
 
 - [ ] LLM-powered claim extraction (Claude API)
 - [ ] Multilingual support (Hindi + more via XLM-RoBERTa)
-- [ ] Semantic clustering with sentence-transformers
+- [x] Semantic clustering with sentence-transformers
 - [ ] Story timeline tracking (how stories evolve over time)
 - [ ] Daily misinformation report generator
 - [ ] Deepfake/image manipulation detection
