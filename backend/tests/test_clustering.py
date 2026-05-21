@@ -69,8 +69,7 @@ class TestClustering:
     def test_pick_best_title_prefers_high_credibility(self):
         """Should pick the title from the most credible source."""
         title = _pick_best_title(SAMPLE_ARTICLES)
-        # Reuters (95) should win over BBC (88) and NDTV (78)
-        assert "Reuters" not in title  # we pick the title, not the source
+        assert "Reuters" not in title
         assert len(title) > 10
 
     def test_pick_best_title_single_article(self):
@@ -123,22 +122,19 @@ class TestClustering:
 class TestConfidenceScoring:
 
     def test_source_count_scoring(self):
-        """More sources = higher score, with diminishing returns."""
         assert _source_count_score(1) == 5
         assert _source_count_score(2) == 15
         assert _source_count_score(3) == 25
         assert _source_count_score(5) == 37
         assert _source_count_score(6) == 40
-        assert _source_count_score(10) == 40  # capped at 40
+        assert _source_count_score(10) == 40
 
     def test_diversity_scoring(self):
-        """More source types = higher diversity score."""
         assert _diversity_score(1) == 5
         assert _diversity_score(2) == 12
         assert _diversity_score(4) == 25
 
     def test_source_type_mapping(self):
-        """Should correctly identify source types."""
         assert _get_source_type("reuters") == "wire_service"
         assert _get_source_type("bbc_world") == "broadcaster"
         assert _get_source_type("ndtv") == "national"
@@ -146,23 +142,16 @@ class TestConfidenceScoring:
         assert _get_source_type("unknown_source") == "unknown"
 
     def test_score_multi_source_cluster(self):
-        """3-source cluster should score higher than single source."""
         multi_cluster = _build_cluster(SAMPLE_ARTICLES)
         single_cluster = _build_cluster(SINGLE_ARTICLE)
-
         scored_multi = score_cluster(multi_cluster)
         scored_single = score_cluster(single_cluster)
-
         assert scored_multi["confidence_score"] > scored_single["confidence_score"]
-        assert scored_multi["confidence_label"] in [
-            l["label"] for l in CONFIDENCE_LEVELS
-        ]
+        assert scored_multi["confidence_label"] in [l["label"] for l in CONFIDENCE_LEVELS]
 
     def test_score_has_breakdown(self):
-        """Scored cluster should include detailed breakdown."""
         cluster = _build_cluster(SAMPLE_ARTICLES)
         scored = score_cluster(cluster)
-
         assert "scoring_breakdown" in scored
         breakdown = scored["scoring_breakdown"]
         assert "source_count" in breakdown
@@ -170,55 +159,48 @@ class TestConfidenceScoring:
         assert "source_diversity" in breakdown
 
     def test_score_has_color(self):
-        """Scored cluster should include a color for frontend display."""
         cluster = _build_cluster(SAMPLE_ARTICLES)
         scored = score_cluster(cluster)
-
         assert "confidence_color" in scored
         assert scored["confidence_color"].startswith("#")
 
     def test_score_range(self):
-        """Score should always be between 0 and 100."""
         cluster = _build_cluster(SAMPLE_ARTICLES)
         scored = score_cluster(cluster)
-
         assert 0 <= scored["confidence_score"] <= 100
 
     def test_empty_cluster(self):
-        """Should handle empty cluster gracefully."""
         empty = {"articles": [], "source_ids": []}
         scored = score_cluster(empty)
         assert scored["confidence_score"] == 0
         assert scored["confidence_label"] == "Disputed"
 
     def test_high_credibility_sources_boost_score(self):
-        """Wire services (95 credibility) should produce higher scores."""
         wire_articles = [
-            {"id": "1", "title": "Test", "source_id": "reuters",
-             "credibility_score": 95, "region": "global"},
-            {"id": "2", "title": "Test 2", "source_id": "ap_news",
-             "credibility_score": 95, "region": "global"},
+            {"id": "1", "title": "Test", "source_id": "reuters", "credibility_score": 95, "region": "global"},
+            {"id": "2", "title": "Test 2", "source_id": "ap_news", "credibility_score": 95, "region": "global"},
         ]
         low_articles = [
-            {"id": "3", "title": "Test", "source_id": "gdelt_blog1",
-             "credibility_score": 40, "region": "global"},
-            {"id": "4", "title": "Test 2", "source_id": "gdelt_blog2",
-             "credibility_score": 40, "region": "global"},
+            {"id": "3", "title": "Test", "source_id": "gdelt_blog1", "credibility_score": 40, "region": "global"},
+            {"id": "4", "title": "Test 2", "source_id": "gdelt_blog2", "credibility_score": 40, "region": "global"},
         ]
-
-        wire_cluster = {
-            "articles": wire_articles,
-            "source_ids": ["reuters", "ap_news"],
-        }
-        low_cluster = {
-            "articles": low_articles,
-            "source_ids": ["gdelt_blog1", "gdelt_blog2"],
-        }
-
+        wire_cluster = {"articles": wire_articles, "source_ids": ["reuters", "ap_news"]}
+        low_cluster = {"articles": low_articles, "source_ids": ["gdelt_blog1", "gdelt_blog2"]}
         wire_scored = score_cluster(wire_cluster)
         low_scored = score_cluster(low_cluster)
-
         assert wire_scored["confidence_score"] > low_scored["confidence_score"]
+
+    def test_single_source_cluster_capped_at_39(self):
+        """Single source — even high credibility — must not exceed 39 (Unverified band)."""
+        high_cred_single = [
+            {"id": "1", "title": "Test", "source_id": "reuters", "credibility_score": 95, "region": "global"},
+        ]
+        cluster = {"articles": high_cred_single, "source_ids": ["reuters"]}
+        scored = score_cluster(cluster)
+        assert scored["confidence_score"] <= 39, (
+            f"Single source scored {scored['confidence_score']}, must be <= 39"
+        )
+        assert scored["confidence_label"] in ["Unverified", "Disputed"]
 
 
 # ─── SEMANTIC CLUSTERING TESTS (Day 1 — sentence-transformers) ──
@@ -320,7 +302,6 @@ class TestSemanticClustering:
 if __name__ == "__main__":
     print("Running VerifyPulse Tests...\n")
 
-    # Simple test runner (works without pytest too)
     test_classes = [TestClustering, TestConfidenceScoring, TestSemanticClustering]
     passed = 0
     failed = 0

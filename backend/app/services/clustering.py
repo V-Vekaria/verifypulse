@@ -9,12 +9,10 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 
 from app.services.database import get_db
+from app.config import CLUSTER_SIMILARITY_THRESHOLD, CLUSTER_WINDOW_HOURS
 
 # ─── SETTINGS ────────────────────────────────────────────────────
-# Semantic similarity threshold — 0.55 is good for MiniLM
-# (higher than TF-IDF threshold because embeddings are denser)
-SIMILARITY_THRESHOLD = 0.55
-CLUSTER_WINDOW_HOURS = 48
+SIMILARITY_THRESHOLD = CLUSTER_SIMILARITY_THRESHOLD
 
 # Model loaded once at module level — ~90MB download on first run
 _MODEL: SentenceTransformer | None = None
