@@ -8,13 +8,12 @@ Run with: uvicorn app.main:app --reload
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Add this import at the top with other service imports
-from app.services.clustering import get_model
 from app.routers import stories, data
 from app.services.database import init_database
 from app.services.scheduler import start_scheduler, stop_scheduler
 from app.models import HealthResponse
 from app.services.database import get_article_count, get_unique_source_count, get_last_fetch
+from app.services.clustering import get_model
 
 # ─── APP SETUP ──────────────────────────────────────────────────
 app = FastAPI(
@@ -27,7 +26,7 @@ and scores each one for trustworthiness.
 
 ### How it works:
 1. **Aggregate** — Pull from Reuters, AP, BBC, Al Jazeera, NDTV + GDELT
-2. **Cluster** — Group related articles using TF-IDF similarity
+2. **Cluster** — Group related articles using sentence-transformers semantic embeddings
 3. **Score** — Calculate confidence from source count, credibility, and diversity
 4. **Serve** — Present scored stories via REST API
 
@@ -78,13 +77,13 @@ def health_check():
 @app.on_event("startup")
 async def startup():
     print("\n" + "=" * 50)
-    print("  🔍 VerifyPulse API v0.4.0")
-    print("  📖 Docs: http://localhost:8000/docs")
-    print("  📰 Stories: http://localhost:8000/api/stories")
+    print("  VerifyPulse API v0.4.0")
+    print("  Docs: http://localhost:8000/docs")
+    print("  Stories: http://localhost:8000/api/stories")
     print("=" * 50 + "\n")
 
     init_database()
-    get_model()
+    get_model()        # warm up sentence-transformers model at boot
     start_scheduler()
 
 
