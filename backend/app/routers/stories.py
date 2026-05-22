@@ -3,10 +3,11 @@ VerifyPulse API Router — Stories
 All story-related endpoints with proper documentation.
 """
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 
 from app.services.clustering import cluster_articles, save_cluster_assignments
 from app.services.confidence import score_all_clusters, CONFIDENCE_LEVELS
+from app.services.claim_extractor import extract_claims_for_cluster
 
 router = APIRouter(prefix="/api", tags=["stories"])
 
@@ -73,6 +74,41 @@ def get_story_detail(cluster_id: str, hours: int = 48):
         "found": False,
         "story": None,
         "message": f"No story found with cluster_id: {cluster_id}",
+    }
+
+
+@router.get("/stories/{cluster_id}/claims")
+def get_story_claims(cluster_id: str, hours: int = 48):
+    """
+    **Claude-powered claim extraction** — returns specific verifiable factual claims
+    from the most credible article in a story cluster.
+
+    Requires ANTHROPIC_API_KEY environment variable to be set.
+    Returns empty claims list gracefully if key is missing.
+    """
+    clusters = cluster_articles(hours=hours)
+    scored = score_all_clusters(clusters)
+
+    target = None
+    for cluster in scored:
+        if cluster["cluster_id"] == cluster_id:
+            target = cluster
+            break
+
+    if not target:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No story found with cluster_id: {cluster_id}"
+        )
+
+    claims = extract_claims_for_cluster(target)
+
+    return {
+        "cluster_id": cluster_id,
+        "title": target["title"],
+        "claims": claims,
+        "claim_count": len(claims),
+        "source_article": target["articles"][0]["title"] if target["articles"] else None,
     }
 
 
