@@ -21,6 +21,7 @@ class Article(BaseModel):
     region: str = "global"
     credibility_score: int = 50
     fetched_at: datetime = datetime.now()
+    language: str = "en"  # Day 5: language detection
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
@@ -30,7 +31,7 @@ class StoryCluster(BaseModel):
     """A group of related articles about the same event."""
 
     id: Optional[str] = None
-    title: str  # representative headline
+    title: str
     articles: list[Article] = []
     source_count: int = 0
     confidence_score: float = 0.0
@@ -38,7 +39,7 @@ class StoryCluster(BaseModel):
     regions: list[str] = []
     first_reported: Optional[datetime] = None
     last_updated: Optional[datetime] = None
-    claims: Optional[list[str]] = None  # Claude-extracted factual claims
+    claims: Optional[list[str]] = None
 
 
 class HealthResponse(BaseModel):
@@ -58,3 +59,14 @@ class ClaimsResponse(BaseModel):
     claims: list[str] = []
     claim_count: int = 0
     source_article: Optional[str] = None
+
+
+class DailyReport(BaseModel):
+    """Response model for the /reports/daily endpoint."""
+
+    date: str
+    story_count: int
+    threshold: Optional[float] = 40.0
+    summary: str
+    stories: list[dict] = []
+    markdown: str
