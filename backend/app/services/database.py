@@ -1,7 +1,6 @@
 """
 VerifyPulse Database Manager
-SQLite storage for articles, sources, and fetch history.
-Replaces the in-memory store from Day 1.
+SQLite storage for articles, sources, fetch history, and story snapshots.
 """
 
 import sqlite3
@@ -78,6 +77,16 @@ def init_database():
                 total_duplicate INTEGER DEFAULT 0
             );
 
+            -- Story snapshots: confidence score history per cluster over time
+            CREATE TABLE IF NOT EXISTS story_snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cluster_id TEXT NOT NULL,
+                snapshot_at TEXT DEFAULT (datetime('now')),
+                confidence_score REAL NOT NULL,
+                article_count INTEGER DEFAULT 0,
+                source_count INTEGER DEFAULT 0
+            );
+
             -- Indexes for fast queries
             CREATE INDEX IF NOT EXISTS idx_articles_region
                 ON articles(region);
@@ -89,6 +98,10 @@ def init_database():
                 ON articles(fetched_at DESC);
             CREATE INDEX IF NOT EXISTS idx_articles_cluster
                 ON articles(cluster_id);
+            CREATE INDEX IF NOT EXISTS idx_snapshots_cluster
+                ON story_snapshots(cluster_id);
+            CREATE INDEX IF NOT EXISTS idx_snapshots_time
+                ON story_snapshots(snapshot_at DESC);
         """)
 
         # Seed source credibility table from config
@@ -177,18 +190,7 @@ def get_articles(
     offset: int = 0,
     hours: Optional[int] = None,
 ) -> list[dict]:
-    """
-    Query articles with optional filters.
-
-    Args:
-        region: Filter by region (e.g. 'india', 'east_asia')
-        limit: Max articles to return
-        offset: Pagination offset
-        hours: Only articles from the last N hours
-
-    Returns:
-        List of article dicts
-    """
+    """Query articles with optional filters."""
     query = "SELECT * FROM articles WHERE 1=1"
     params = []
 
@@ -258,6 +260,67 @@ def get_last_fetch() -> Optional[dict]:
             "SELECT * FROM fetch_log ORDER BY id DESC LIMIT 1"
         ).fetchone()
         return dict(row) if row else None
+
+
+# ─── STORY SNAPSHOTS ────────────────────────────────────────────
+def save_snapshot(cluster_id: str, confidence_score: float,
+                  article_count: int, source_count: int):
+    """
+    Record a confidence snapshot for a story cluster.
+    Called after every clustering run so we can track how stories evolve.
+
+    Args:
+        cluster_id: The cluster's unique ID
+        confidence_score: Current confidence score (0-100)
+        article_count: Number of articles in cluster at this point
+        source_count: Number of unique sources at this point
+    """
+    with get_db() as conn:
+        conn.execute("""
+            INSERT INTO story_snapshots
+                (cluster_id, confidence_score, article_count, source_count)
+            VALUES (?, ?, ?, ?)
+        """, (cluster_id, confidence_score, article_count, source_count))
+
+
+def get_story_timeline(cluster_id: str) -> list[dict]:
+    """
+    Return all confidence snapshots for a cluster, oldest first.
+    Used by GET /api/stories/{id}/timeline endpoint.
+
+    Args:
+        cluster_id: The cluster's unique ID
+
+    Returns:
+        List of snapshot dicts sorted by time ascending
+    """
+    with get_db() as conn:
+        rows = conn.execute("""
+            SELECT id, cluster_id, snapshot_at, confidence_score,
+                   article_count, source_count
+            FROM story_snapshots
+            WHERE cluster_id = ?
+            ORDER BY snapshot_at ASC
+        """, (cluster_id,)).fetchall()
+        return [dict(row) for row in rows]
+
+
+def save_snapshots_for_clusters(clusters: list[dict]):
+    """
+    Save snapshots for all clusters in a scoring run.
+    Called from the scheduler after every fetch + cluster cycle.
+
+    Args:
+        clusters: List of scored cluster dicts
+    """
+    for cluster in clusters:
+        save_snapshot(
+            cluster_id=cluster["cluster_id"],
+            confidence_score=cluster.get("confidence_score", 0),
+            article_count=len(cluster.get("articles", [])),
+            source_count=cluster.get("source_count", 0),
+        )
+    print(f"  📸 Saved {len(clusters)} story snapshots")
 
 
 # ─── HELPERS ────────────────────────────────────────────────────
