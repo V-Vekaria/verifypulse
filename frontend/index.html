@@ -81,6 +81,11 @@
         }
         .logo-text span { color: var(--accent); }
 
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
         .header-stats {
             display: flex;
             gap: 20px;
@@ -110,6 +115,26 @@
             50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
         }
 
+        /* Report button in header */
+        .report-btn {
+            font-family: var(--font-display);
+            font-size: 12px;
+            font-weight: 500;
+            padding: 7px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .report-btn:hover {
+            border-color: var(--developing);
+            color: var(--developing);
+            background: rgba(234, 179, 8, 0.08);
+        }
+
         /* ─── SUMMARY BAR ────────────────────────── */
         .summary-bar {
             max-width: 1280px;
@@ -128,11 +153,7 @@
             align-items: center;
             gap: 5px;
         }
-        .summary-chip .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
+        .summary-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
 
         /* ─── FILTERS ────────────────────────────── */
         .filters {
@@ -156,21 +177,13 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .filter-btn:hover {
-            border-color: var(--accent);
-            color: var(--text-primary);
-        }
+        .filter-btn:hover { border-color: var(--accent); color: var(--text-primary); }
         .filter-btn.active {
             background: var(--accent-glow);
             border-color: var(--accent);
             color: var(--accent);
         }
-        .filter-divider {
-            width: 1px;
-            height: 24px;
-            background: var(--border);
-            margin: 0 2px;
-        }
+        .filter-divider { width: 1px; height: 24px; background: var(--border); margin: 0 2px; }
         .refresh-btn {
             font-family: var(--font-display);
             font-size: 12px;
@@ -195,11 +208,7 @@
         }
 
         /* ─── STORY CARDS ────────────────────────── */
-        .stories-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .stories-grid { display: flex; flex-direction: column; gap: 10px; }
         .story-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -223,9 +232,7 @@
         .story-card::before {
             content: '';
             position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
+            left: 0; top: 0; bottom: 0;
             width: 3px;
             background: var(--card-accent, var(--text-muted));
             border-radius: 3px 0 0 3px;
@@ -236,7 +243,6 @@
             transform: translateY(-1px);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
-
         .story-top {
             display: flex;
             align-items: flex-start;
@@ -244,13 +250,7 @@
             gap: 14px;
             margin-bottom: 10px;
         }
-        .story-title {
-            font-size: 15px;
-            font-weight: 600;
-            line-height: 1.4;
-            flex: 1;
-        }
-
+        .story-title { font-size: 15px; font-weight: 600; line-height: 1.4; flex: 1; }
         .confidence-badge {
             font-family: var(--font-display);
             font-size: 11px;
@@ -261,7 +261,6 @@
             flex-shrink: 0;
             border: 1px solid;
         }
-
         .story-meta {
             display: flex;
             align-items: center;
@@ -277,11 +276,9 @@
             gap: 5px;
         }
         .meta-item .val { color: var(--text-secondary); }
-
         .source-dots { display: flex; gap: 3px; }
         .source-dot {
-            width: 18px;
-            height: 18px;
+            width: 18px; height: 18px;
             border-radius: 4px;
             font-family: var(--font-display);
             font-size: 8px;
@@ -292,7 +289,6 @@
             color: #fff;
             text-transform: uppercase;
         }
-
         .region-tag {
             font-family: var(--font-display);
             font-size: 10px;
@@ -302,8 +298,28 @@
             color: var(--text-muted);
             border: 1px solid var(--border);
         }
+        /* Language badge */
+        .lang-badge {
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .lang-hi {
+            background: rgba(251, 146, 60, 0.12);
+            color: #fb923c;
+            border: 1px solid rgba(251, 146, 60, 0.25);
+        }
+        .lang-en {
+            background: rgba(59, 130, 246, 0.08);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
 
-        /* ─── STORY DETAIL PANEL ─────────────────── */
+        /* ─── DETAIL PANEL ───────────────────────── */
         .detail-overlay {
             position: fixed;
             inset: 0;
@@ -315,7 +331,7 @@
         }
         .detail-overlay.open { display: flex; }
         .detail-panel {
-            width: min(620px, 92vw);
+            width: min(680px, 92vw);
             height: 100vh;
             background: var(--bg-secondary);
             border-left: 1px solid var(--border);
@@ -340,14 +356,7 @@
             transition: all 0.2s;
         }
         .detail-close:hover { color: var(--text-primary); border-color: var(--border-light); }
-
-        .detail-title {
-            font-size: 21px;
-            font-weight: 700;
-            line-height: 1.3;
-            margin-bottom: 16px;
-        }
-
+        .detail-title { font-size: 21px; font-weight: 700; line-height: 1.3; margin-bottom: 16px; }
         .score-display {
             display: flex;
             align-items: center;
@@ -358,12 +367,7 @@
             border-radius: 10px;
             margin-bottom: 20px;
         }
-        .score-ring {
-            width: 72px;
-            height: 72px;
-            position: relative;
-            flex-shrink: 0;
-        }
+        .score-ring { width: 72px; height: 72px; position: relative; flex-shrink: 0; }
         .score-ring svg { transform: rotate(-90deg); }
         .score-ring-text {
             position: absolute;
@@ -376,17 +380,8 @@
             font-weight: 700;
         }
         .score-info { flex: 1; }
-        .score-label {
-            font-family: var(--font-display);
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .score-desc {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-top: 2px;
-        }
-
+        .score-label { font-family: var(--font-display); font-size: 14px; font-weight: 600; }
+        .score-desc { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
         .breakdown-section { margin-bottom: 24px; }
         .section-title {
             font-family: var(--font-display);
@@ -398,44 +393,114 @@
             margin-bottom: 12px;
             padding-bottom: 6px;
             border-bottom: 1px solid var(--border);
-        }
-
-        .breakdown-bar {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 0;
+            justify-content: space-between;
         }
-        .breakdown-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-            width: 110px;
-            flex-shrink: 0;
+        .section-action {
+            font-family: var(--font-display);
+            font-size: 11px;
+            color: var(--accent);
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            transition: opacity 0.2s;
         }
+        .section-action:hover { opacity: 0.7; }
+        .breakdown-bar { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+        .breakdown-label { font-size: 13px; color: var(--text-secondary); width: 110px; flex-shrink: 0; }
         .breakdown-track {
-            flex: 1;
-            height: 6px;
+            flex: 1; height: 6px;
             background: var(--bg-primary);
             border-radius: 3px;
             overflow: hidden;
         }
-        .breakdown-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.6s ease;
-        }
+        .breakdown-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
         .breakdown-value {
             font-family: var(--font-display);
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 12px; font-weight: 600;
             color: var(--text-primary);
-            width: 50px;
-            text-align: right;
+            width: 50px; text-align: right;
         }
-        .breakdown-detail {
+        .breakdown-detail { font-size: 11px; color: var(--text-muted); margin: -2px 0 4px 120px; }
+
+        /* ─── CLAIMS ─────────────────────────────── */
+        .claims-list { display: flex; flex-direction: column; gap: 8px; }
+        .claim-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            transition: border-color 0.2s;
+        }
+        .claim-item:hover { border-color: var(--border-light); color: var(--text-primary); }
+        .claim-num {
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--accent);
+            background: var(--accent-glow);
+            padding: 2px 6px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .claims-loading {
+            font-family: var(--font-display);
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 12px;
+            text-align: center;
+        }
+        .claims-empty {
+            font-family: var(--font-display);
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 12px;
+            text-align: center;
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+        }
+        .claims-note {
             font-size: 11px;
             color: var(--text-muted);
-            margin: -2px 0 4px 120px;
+            margin-top: 6px;
+            padding: 0 4px;
+        }
+
+        /* ─── TIMELINE CHART ────────────────────── */
+        .timeline-chart-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 8px;
+        }
+        .chart-canvas { width: 100%; height: 120px; display: block; }
+        .chart-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-family: var(--font-display);
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .chart-val { color: var(--text-secondary); font-weight: 600; }
+        .timeline-empty {
+            font-family: var(--font-display);
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 12px;
+            text-align: center;
+            border: 1px dashed var(--border);
+            border-radius: 8px;
         }
 
         /* ─── ARTICLE TIMELINE ───────────────────── */
@@ -443,9 +508,7 @@
         .timeline::before {
             content: '';
             position: absolute;
-            left: 6px;
-            top: 8px;
-            bottom: 8px;
+            left: 6px; top: 8px; bottom: 8px;
             width: 2px;
             background: var(--border);
         }
@@ -462,54 +525,138 @@
         .timeline-item::before {
             content: '';
             position: absolute;
-            left: -18px;
-            top: 16px;
-            width: 10px;
-            height: 10px;
+            left: -18px; top: 16px;
+            width: 10px; height: 10px;
             border-radius: 50%;
             border: 2px solid var(--border-light);
             background: var(--bg-secondary);
         }
-        .timeline-item:first-child::before {
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-        .timeline-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-        }
-        .timeline-source {
-            font-size: 13px;
-            font-weight: 600;
-        }
+        .timeline-item:first-child::before { background: var(--accent); border-color: var(--accent); }
+        .timeline-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .timeline-source { font-size: 13px; font-weight: 600; }
         .timeline-cred {
             font-family: var(--font-display);
-            font-size: 10px;
-            font-weight: 600;
-            padding: 1px 6px;
-            border-radius: 3px;
+            font-size: 10px; font-weight: 600;
+            padding: 1px 6px; border-radius: 3px;
         }
         .timeline-time {
             font-family: var(--font-display);
-            font-size: 10px;
-            color: var(--text-muted);
-            margin-left: auto;
+            font-size: 10px; color: var(--text-muted); margin-left: auto;
         }
-        .timeline-title {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.4;
-            margin-bottom: 4px;
-        }
+        .timeline-title { font-size: 13px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 4px; }
         .timeline-link {
             font-family: var(--font-display);
-            font-size: 11px;
-            color: var(--accent);
-            text-decoration: none;
+            font-size: 11px; color: var(--accent); text-decoration: none;
         }
         .timeline-link:hover { text-decoration: underline; }
+
+        /* ─── REPORT MODAL ───────────────────────── */
+        .report-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(6px);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .report-modal.open { display: flex; }
+        .report-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            width: min(680px, 100%);
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 28px;
+            animation: modalIn 0.2s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .report-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .report-header h2 {
+            font-family: var(--font-display);
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .report-actions { display: flex; gap: 8px; }
+        .btn-small {
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-small:hover { color: var(--text-primary); border-color: var(--border-light); }
+        .btn-small.primary {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+            color: var(--accent);
+        }
+        .report-meta {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .report-stat {
+            font-family: var(--font-display);
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        .report-story-item {
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--disputed);
+        }
+        .report-story-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+        .report-story-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-family: var(--font-display);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .report-empty {
+            text-align: center;
+            padding: 32px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .report-markdown {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            white-space: pre-wrap;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: var(--font-display);
+            margin-top: 16px;
+        }
 
         /* ─── LOADING & EMPTY STATES ─────────────── */
         .loading-state, .empty-state {
@@ -518,8 +665,7 @@
             color: var(--text-muted);
         }
         .loading-spinner {
-            width: 28px;
-            height: 28px;
+            width: 28px; height: 28px;
             border: 3px solid var(--border);
             border-top-color: var(--accent);
             border-radius: 50%;
@@ -576,6 +722,7 @@
             .story-title { font-size: 14px; }
             .story-meta { gap: 10px; }
             .filter-divider { display: none; }
+            .report-btn { display: none; }
         }
     </style>
 </head>
@@ -588,20 +735,17 @@
             <div class="logo-icon">🔍</div>
             <div class="logo-text">Verify<span>Pulse</span></div>
         </div>
-        <div class="header-stats">
-            <div class="stat-pill">
-                <div class="live-dot"></div>
-                <span>LIVE</span>
+        <div class="header-right">
+            <div class="header-stats">
+                <div class="stat-pill">
+                    <div class="live-dot"></div>
+                    <span>LIVE</span>
+                </div>
+                <div class="stat-pill">Articles: <span class="num" id="stat-articles">--</span></div>
+                <div class="stat-pill">Sources: <span class="num" id="stat-sources">--</span></div>
+                <div class="stat-pill" id="stat-last-fetch">Updated: <span class="num">--</span></div>
             </div>
-            <div class="stat-pill">
-                Articles: <span class="num" id="stat-articles">--</span>
-            </div>
-            <div class="stat-pill">
-                Sources: <span class="num" id="stat-sources">--</span>
-            </div>
-            <div class="stat-pill" id="stat-last-fetch">
-                Updated: <span class="num">--</span>
-            </div>
+            <button class="report-btn" onclick="openReport()">📋 Daily Report</button>
         </div>
     </div>
 </header>
@@ -635,11 +779,9 @@
 
 <!-- ─── FOOTER ───────────────────────────────────────── -->
 <footer class="footer">
+    <div class="footer-text">VerifyPulse v0.2 — Phase 2 complete</div>
     <div class="footer-text">
-        VerifyPulse v0.4 — News verification prototype
-    </div>
-    <div class="footer-text">
-        Data: Reuters, AP, BBC, Al Jazeera, NDTV, GDELT ·
+        Reuters · AP · BBC · Al Jazeera · NDTV · NDTV Hindi · Aaj Tak · GDELT ·
         <a href="http://localhost:8000/docs" target="_blank">API Docs</a>
     </div>
 </footer>
@@ -652,21 +794,41 @@
     </div>
 </div>
 
+<!-- ─── REPORT MODAL ─────────────────────────────────── -->
+<div class="report-modal" id="report-modal" onclick="closeReport(event)">
+    <div class="report-box" onclick="event.stopPropagation()">
+        <div class="report-header">
+            <h2>📋 Daily Misinformation Report</h2>
+            <div class="report-actions">
+                <button class="btn-small primary" onclick="downloadReport()">↓ Download .md</button>
+                <button class="btn-small" onclick="closeReport()">✕ Close</button>
+            </div>
+        </div>
+        <div id="report-content">
+            <div class="loading-state" style="padding:32px">
+                <div class="loading-spinner"></div>
+                <div>Generating report...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // ─── CONFIG ────────────────────────────────────────────
 const API_BASE = 'http://localhost:8000';
 let currentRegion = '';
 let currentMinConfidence = 0;
 let allStories = [];
+let reportMarkdown = '';
 
 // ─── SOURCE CONFIG ─────────────────────────────────────
 const SOURCE_COLORS = {
     reuters: '#ff6b00', ap_news: '#e4002b', bbc_world: '#bb1919',
-    aljazeera: '#fa9e1c', ndtv: '#e23838',
+    aljazeera: '#fa9e1c', ndtv: '#e23838', ndtv_hindi: '#f97316', aaj_tak: '#ef4444',
 };
 const SOURCE_NAMES = {
     reuters: 'Reuters', ap_news: 'AP News', bbc_world: 'BBC World',
-    aljazeera: 'Al Jazeera', ndtv: 'NDTV',
+    aljazeera: 'Al Jazeera', ndtv: 'NDTV', ndtv_hindi: 'NDTV Hindi', aaj_tak: 'Aaj Tak',
 };
 
 function getSourceColor(id) {
@@ -675,17 +837,21 @@ function getSourceColor(id) {
     for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
     return `hsl(${Math.abs(hash) % 360}, 50%, 45%)`;
 }
-
 function getSourceInitials(id) {
-    const map = { reuters:'R', ap_news:'AP', bbc_world:'BB', aljazeera:'AJ', ndtv:'ND' };
+    const map = { reuters:'R', ap_news:'AP', bbc_world:'BB', aljazeera:'AJ',
+        ndtv:'ND', ndtv_hindi:'NH', aaj_tak:'AT' };
     if (map[id]) return map[id];
     return id.replace('gdelt_', '').substring(0, 2).toUpperCase();
 }
-
 function getSourceName(id) {
     if (SOURCE_NAMES[id]) return SOURCE_NAMES[id];
     if (id.startsWith('gdelt_')) return id.replace('gdelt_', '').replace(/_/g, '.');
     return id;
+}
+
+// ─── DETECT HINDI IN SOURCE IDS ────────────────────────
+function hasHindiSources(sourceIds) {
+    return (sourceIds || []).some(id => id === 'ndtv_hindi' || id === 'aaj_tak');
 }
 
 // ─── LOAD STATS ────────────────────────────────────────
@@ -699,7 +865,7 @@ async function loadStats() {
             document.getElementById('stat-last-fetch').querySelector('.num').textContent =
                 timeAgo(data.last_fetch.fetched_at);
         }
-    } catch (e) { console.error('Stats error:', e); }
+    } catch (e) {}
 }
 
 // ─── LOAD STORIES ──────────────────────────────────────
@@ -717,23 +883,20 @@ async function loadStories() {
         const res = await fetch(url);
         const data = await res.json();
         allStories = data.stories || [];
-
-        // Update summary bar
         updateSummary(allStories);
 
         if (allStories.length === 0) {
             grid.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">📭</div>
-                    <div class="empty-text">No stories found</div>
+                    <div class="empty-text">No stories yet</div>
                     <div class="empty-hint">
-                        Try fetching news first: <a href="${API_BASE}/docs" target="_blank">API Docs</a>
-                        → POST /api/fetch → Execute, then refresh here.
+                        Fetch news first: <a href="${API_BASE}/docs" target="_blank">API Docs</a>
+                        → POST /api/fetch → Execute, then click Refresh.
                     </div>
                 </div>`;
             return;
         }
-
         grid.innerHTML = allStories.map(renderStoryCard).join('');
     } catch (e) {
         grid.innerHTML = `
@@ -741,7 +904,7 @@ async function loadStories() {
                 <div class="empty-icon">⚠️</div>
                 <div class="empty-text">Can't connect to VerifyPulse API</div>
                 <div class="empty-hint">
-                    Make sure the backend is running:<br>
+                    Start the backend:<br>
                     <code>python -m uvicorn app.main:app --reload</code>
                 </div>
             </div>`;
@@ -753,12 +916,10 @@ async function loadStories() {
 
 // ─── SUMMARY BAR ───────────────────────────────────────
 function updateSummary(stories) {
-    const counts = { Verified: 0, 'Likely Accurate': 0, Developing: 0, Unverified: 0, Disputed: 0 };
+    const counts = { Verified:0, 'Likely Accurate':0, Developing:0, Unverified:0, Disputed:0 };
     const colors = { Verified:'var(--verified)', 'Likely Accurate':'var(--likely)',
         Developing:'var(--developing)', Unverified:'var(--unverified)', Disputed:'var(--disputed)' };
-
     stories.forEach(s => { if (counts[s.confidence_label] !== undefined) counts[s.confidence_label]++; });
-
     const bar = document.getElementById('summary-bar');
     bar.innerHTML = Object.entries(counts)
         .filter(([, v]) => v > 0)
@@ -766,11 +927,10 @@ function updateSummary(stories) {
             <div class="summary-chip" style="background:${colors[label]}15;color:${colors[label]};border:1px solid ${colors[label]}30">
                 <div class="dot" style="background:${colors[label]}"></div>
                 ${count} ${label}
-            </div>
-        `).join('') + `
-            <div class="summary-chip" style="background:var(--bg-secondary);color:var(--text-muted);border:1px solid var(--border)">
-                ${stories.length} total stories
-            </div>`;
+            </div>`).join('')
+        + `<div class="summary-chip" style="background:var(--bg-secondary);color:var(--text-muted);border:1px solid var(--border)">
+            ${stories.length} total stories
+           </div>`;
 }
 
 // ─── RENDER STORY CARD ─────────────────────────────────
@@ -779,9 +939,11 @@ function renderStoryCard(story) {
     const sources = (story.source_ids || []).map(id =>
         `<div class="source-dot" style="background:${getSourceColor(id)}" title="${getSourceName(id)}">${getSourceInitials(id)}</div>`
     ).join('');
-
     const regions = (story.regions || []).map(r => `<span class="region-tag">${r}</span>`).join(' ');
     const timeStr = story.first_reported ? timeAgo(story.first_reported) : '';
+    const langBadge = hasHindiSources(story.source_ids)
+        ? '<span class="lang-badge lang-hi">HI+EN</span>'
+        : '';
 
     return `
         <div class="story-card" style="--card-accent:${color}" onclick="openDetail('${story.cluster_id}')">
@@ -796,11 +958,10 @@ function renderStoryCard(story) {
                     <span class="source-dots">${sources}</span>
                     <span class="val">${story.source_count} source${story.source_count !== 1 ? 's' : ''}</span>
                 </div>
-                <div class="meta-item">
-                    ${story.article_count} article${story.article_count !== 1 ? 's' : ''}
-                </div>
+                <div class="meta-item">${story.article_count} article${story.article_count !== 1 ? 's' : ''}</div>
                 ${timeStr ? `<div class="meta-item">${timeStr}</div>` : ''}
                 <div class="meta-item">${regions}</div>
+                ${langBadge ? `<div class="meta-item">${langBadge}</div>` : ''}
             </div>
         </div>`;
 }
@@ -827,12 +988,14 @@ async function openDetail(clusterId) {
     const content = document.getElementById('detail-content');
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
-
-    content.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div>Loading detail...</div>`;
+    content.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div>Loading...</div>`;
 
     try {
-        const res = await fetch(`${API_BASE}/api/stories/${clusterId}`);
-        const data = await res.json();
+        const [detailRes, timelineRes] = await Promise.all([
+            fetch(`${API_BASE}/api/stories/${clusterId}`),
+            fetch(`${API_BASE}/api/stories/${clusterId}/timeline`).catch(() => null),
+        ]);
+        const data = await detailRes.json();
 
         if (!data.found || !data.story) {
             content.innerHTML = `<div class="empty-state">Story not found</div>`;
@@ -845,15 +1008,17 @@ async function openDetail(clusterId) {
 
         // Breakdown bars
         let breakdownHTML = '';
-        if (bd.source_count) {
-            breakdownHTML += buildBar('Sources', bd.source_count.points, bd.source_count.max, color, `${bd.source_count.value} independent sources`);
-        }
-        if (bd.avg_credibility) {
-            breakdownHTML += buildBar('Credibility', bd.avg_credibility.points, bd.avg_credibility.max, color, `average score: ${bd.avg_credibility.value}/100`);
-        }
-        if (bd.source_diversity) {
-            breakdownHTML += buildBar('Diversity', bd.source_diversity.points, bd.source_diversity.max, color,
-                `types: ${(bd.source_diversity.types || []).join(', ')}`);
+        if (bd.source_count) breakdownHTML += buildBar('Sources', bd.source_count.points, bd.source_count.max, color, `${bd.source_count.value} independent sources`);
+        if (bd.avg_credibility) breakdownHTML += buildBar('Credibility', bd.avg_credibility.points, bd.avg_credibility.max, color, `average score: ${bd.avg_credibility.value}/100`);
+        if (bd.source_diversity) breakdownHTML += buildBar('Diversity', bd.source_diversity.points, bd.source_diversity.max, color, `types: ${(bd.source_diversity.types || []).join(', ')}`);
+
+        // Timeline chart
+        let chartHTML = `<div class="timeline-empty">No history yet — check back after next fetch cycle.</div>`;
+        if (timelineRes && timelineRes.ok) {
+            const tlData = await timelineRes.json();
+            if (tlData.timeline && tlData.timeline.length > 1) {
+                chartHTML = buildTimelineChart(tlData.timeline, color, clusterId);
+            }
         }
 
         // Article timeline
@@ -862,32 +1027,30 @@ async function openDetail(clusterId) {
             const db = b.published_at || b.fetched_at || '';
             return da < db ? -1 : da > db ? 1 : 0;
         });
-
-        const timelineHTML = articles.map((a, i) => {
+        const timelineHTML = articles.map(a => {
             const credColor = a.credibility_score >= 80 ? 'var(--verified)' :
                 a.credibility_score >= 60 ? 'var(--likely)' : 'var(--developing)';
             const credBg = a.credibility_score >= 80 ? 'rgba(34,197,94,0.1)' :
                 a.credibility_score >= 60 ? 'rgba(132,204,22,0.1)' : 'rgba(234,179,8,0.1)';
             const time = a.published_at ? timeAgo(a.published_at) : '';
-
+            const isHindi = a.source_id === 'ndtv_hindi' || a.source_id === 'aaj_tak';
+            const langTag = isHindi ? '<span class="lang-badge lang-hi" style="font-size:9px">HI</span>' : '';
             return `
                 <div class="timeline-item">
                     <div class="timeline-header">
-                        <div class="source-dot" style="background:${getSourceColor(a.source_id)};width:20px;height:20px;font-size:9px">
-                            ${getSourceInitials(a.source_id)}
-                        </div>
+                        <div class="source-dot" style="background:${getSourceColor(a.source_id)};width:20px;height:20px;font-size:9px">${getSourceInitials(a.source_id)}</div>
                         <div class="timeline-source">${escapeHtml(a.source_name || getSourceName(a.source_id))}</div>
+                        ${langTag}
                         <div class="timeline-cred" style="color:${credColor};background:${credBg}">${a.credibility_score}</div>
                         ${time ? `<div class="timeline-time">${time}</div>` : ''}
                     </div>
                     <div class="timeline-title">${escapeHtml(a.title)}</div>
-                    <a href="${a.url}" target="_blank" rel="noopener" class="timeline-link">Read original article →</a>
+                    <a href="${a.url}" target="_blank" rel="noopener" class="timeline-link">Read original →</a>
                 </div>`;
         }).join('');
 
         content.innerHTML = `
             <div class="detail-title">${escapeHtml(story.title)}</div>
-
             <div class="score-display">
                 ${scoreRing(story.confidence_score, color)}
                 <div class="score-info">
@@ -902,12 +1065,142 @@ async function openDetail(clusterId) {
             </div>
 
             <div class="breakdown-section">
+                <div class="section-title">
+                    Confidence Over Time
+                </div>
+                ${chartHTML}
+            </div>
+
+            <div class="breakdown-section">
+                <div class="section-title">
+                    Factual Claims
+                    <button class="section-action" onclick="loadClaims('${clusterId}', this)">Extract with Claude →</button>
+                </div>
+                <div id="claims-${clusterId}">
+                    <div class="claims-empty">Click "Extract with Claude" to analyse this story's factual claims.</div>
+                </div>
+                <div class="claims-note">Requires ANTHROPIC_API_KEY. Uses Claude to extract specific verifiable facts.</div>
+            </div>
+
+            <div class="breakdown-section">
                 <div class="section-title">Source Timeline (${articles.length} articles)</div>
                 <div class="timeline">${timelineHTML}</div>
             </div>
         `;
+
+        // Draw chart after DOM is ready
+        requestAnimationFrame(() => drawChart(clusterId));
+
     } catch (e) {
         content.innerHTML = `<div class="empty-state">Error loading story detail</div>`;
+    }
+}
+
+// ─── TIMELINE CHART ────────────────────────────────────
+function buildTimelineChart(snapshots, color, clusterId) {
+    const scores = snapshots.map(s => s.confidence_score);
+    const first = timeAgo(snapshots[0].snapshot_at);
+    const last = timeAgo(snapshots[snapshots.length - 1].snapshot_at);
+    const min = Math.min(...scores);
+    const max = Math.max(...scores);
+    const current = scores[scores.length - 1];
+
+    return `
+        <div class="timeline-chart-wrap">
+            <canvas class="chart-canvas" id="chart-${clusterId}" data-scores='${JSON.stringify(scores)}' data-color="${color}"></canvas>
+            <div class="chart-meta">
+                <span>First seen: <span class="chart-val">${first}</span></span>
+                <span>Low: <span class="chart-val">${min}</span></span>
+                <span>Current: <span class="chart-val" style="color:${color}">${current}</span></span>
+                <span>High: <span class="chart-val">${max}</span></span>
+            </div>
+        </div>`;
+}
+
+function drawChart(clusterId) {
+    const canvas = document.getElementById(`chart-${clusterId}`);
+    if (!canvas) return;
+    const scores = JSON.parse(canvas.dataset.scores);
+    const color = canvas.dataset.color;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.offsetWidth;
+    const H = canvas.offsetHeight;
+    canvas.width = W * window.devicePixelRatio;
+    canvas.height = H * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+    const pad = { top: 10, right: 10, bottom: 10, left: 10 };
+    const w = W - pad.left - pad.right;
+    const h = H - pad.top - pad.bottom;
+    const minS = Math.max(0, Math.min(...scores) - 10);
+    const maxS = Math.min(100, Math.max(...scores) + 10);
+
+    const px = (i) => pad.left + (i / (scores.length - 1)) * w;
+    const py = (s) => pad.top + h - ((s - minS) / (maxS - minS)) * h;
+
+    // Fill area
+    ctx.beginPath();
+    ctx.moveTo(px(0), py(scores[0]));
+    scores.forEach((s, i) => { if (i > 0) ctx.lineTo(px(i), py(s)); });
+    ctx.lineTo(px(scores.length - 1), pad.top + h);
+    ctx.lineTo(px(0), pad.top + h);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + h);
+    grad.addColorStop(0, color + '33');
+    grad.addColorStop(1, color + '00');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Line
+    ctx.beginPath();
+    ctx.moveTo(px(0), py(scores[0]));
+    scores.forEach((s, i) => { if (i > 0) ctx.lineTo(px(i), py(s)); });
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Dots
+    scores.forEach((s, i) => {
+        ctx.beginPath();
+        ctx.arc(px(i), py(s), i === scores.length - 1 ? 4 : 3, 0, Math.PI * 2);
+        ctx.fillStyle = i === scores.length - 1 ? color : color + '88';
+        ctx.fill();
+    });
+}
+
+// ─── LOAD CLAIMS ───────────────────────────────────────
+async function loadClaims(clusterId, btn) {
+    const container = document.getElementById(`claims-${clusterId}`);
+    if (!container) return;
+    btn.textContent = 'Extracting...';
+    btn.disabled = true;
+    container.innerHTML = '<div class="claims-loading">⏳ Asking Claude to extract claims...</div>';
+
+    try {
+        const res = await fetch(`${API_BASE}/api/stories/${clusterId}/claims`);
+        const data = await res.json();
+
+        if (!data.claims || data.claims.length === 0) {
+            container.innerHTML = '<div class="claims-empty">No claims extracted. Set ANTHROPIC_API_KEY and retry.</div>';
+            btn.textContent = 'Retry';
+            btn.disabled = false;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="claims-list">
+                ${data.claims.map((c, i) => `
+                    <div class="claim-item">
+                        <span class="claim-num">${i + 1}</span>
+                        ${escapeHtml(c)}
+                    </div>`).join('')}
+            </div>`;
+        btn.textContent = '✓ Done';
+    } catch (e) {
+        container.innerHTML = '<div class="claims-empty">Failed to load claims. Check API key and server.</div>';
+        btn.textContent = 'Retry';
+        btn.disabled = false;
     }
 }
 
@@ -928,6 +1221,74 @@ function closeDetail(e) {
     if (e && e.target.id !== 'detail-overlay') return;
     document.getElementById('detail-overlay').classList.remove('open');
     document.body.style.overflow = '';
+}
+
+// ─── DAILY REPORT ──────────────────────────────────────
+async function openReport() {
+    const modal = document.getElementById('report-modal');
+    const content = document.getElementById('report-content');
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    reportMarkdown = '';
+
+    content.innerHTML = `<div class="loading-state" style="padding:32px"><div class="loading-spinner"></div><div>Generating report...</div></div>`;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/reports/daily`);
+        const data = await res.json();
+        reportMarkdown = data.markdown || '';
+
+        if (data.story_count === 0) {
+            content.innerHTML = `
+                <div class="report-meta">
+                    <span class="report-stat">📅 ${data.date}</span>
+                    <span class="report-stat" style="color:var(--verified)">✓ All Clear</span>
+                </div>
+                <div class="report-empty">✅ No low-confidence stories detected today.</div>
+                ${reportMarkdown ? `<pre class="report-markdown">${escapeHtml(reportMarkdown)}</pre>` : ''}`;
+            return;
+        }
+
+        const storiesHTML = (data.stories || []).map(s => `
+            <div class="report-story-item">
+                <div class="report-story-title">${escapeHtml(s.title)}</div>
+                <div class="report-story-meta">
+                    <span>Score: ${s.confidence_score} (${s.confidence_label})</span>
+                    <span>${s.source_count} source${s.source_count !== 1 ? 's' : ''}</span>
+                    <span>${(s.regions || []).join(', ')}</span>
+                </div>
+            </div>`).join('');
+
+        content.innerHTML = `
+            <div class="report-meta">
+                <span class="report-stat">📅 ${data.date}</span>
+                <span class="report-stat" style="color:var(--disputed)">⚠ ${data.story_count} disputed</span>
+                <span class="report-stat">Threshold: &lt;${data.threshold}</span>
+            </div>
+            <div style="margin-bottom:16px">${storiesHTML}</div>
+            ${reportMarkdown ? `<pre class="report-markdown">${escapeHtml(reportMarkdown)}</pre>` : ''}`;
+
+    } catch (e) {
+        content.innerHTML = `<div class="report-empty">Failed to generate report. Is the backend running?</div>`;
+    }
+}
+
+function closeReport(e) {
+    if (e && e.target.id !== 'report-modal') return;
+    document.getElementById('report-modal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function downloadReport() {
+    if (!reportMarkdown) return;
+    const blob = new Blob([reportMarkdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = new Date().toISOString().split('T')[0];
+    a.href = url;
+    a.download = `verifypulse-report-${date}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 
 // ─── FILTERS ───────────────────────────────────────────
@@ -962,9 +1323,9 @@ function timeAgo(ds) {
     if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
     return `${Math.floor(diff/86400)}d ago`;
 }
-
-// ─── KEYBOARD ──────────────────────────────────────────
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeDetail(); closeReport(); }
+});
 
 // ─── INIT ──────────────────────────────────────────────
 loadStats();
