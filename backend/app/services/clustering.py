@@ -1,7 +1,7 @@
 """
 VerifyPulse Story Clustering Engine
 Groups related articles using sentence-transformers semantic embeddings.
-Replaces TF-IDF with all-MiniLM-L6-v2 for paraphrase-aware clustering.
+Day 5: swapped to paraphrase-multilingual-MiniLM-L12-v2 for Hindi + English cross-clustering.
 """
 
 import hashlib
@@ -9,12 +9,10 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 
 from app.services.database import get_db
-from app.config import CLUSTER_SIMILARITY_THRESHOLD, CLUSTER_WINDOW_HOURS
+from app.config import CLUSTER_SIMILARITY_THRESHOLD, CLUSTER_WINDOW_HOURS, EMBEDDING_MODEL
 
-# ─── SETTINGS ────────────────────────────────────────────────────
 SIMILARITY_THRESHOLD = CLUSTER_SIMILARITY_THRESHOLD
 
-# Model loaded once at module level — ~90MB download on first run
 _MODEL: SentenceTransformer | None = None
 
 
@@ -22,8 +20,8 @@ def get_model() -> SentenceTransformer:
     """Return the singleton embedding model, loading it if needed."""
     global _MODEL
     if _MODEL is None:
-        print("  📦 Loading sentence-transformers model (first run only)...")
-        _MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+        print(f"  📦 Loading embedding model: {EMBEDDING_MODEL} (first run only)...")
+        _MODEL = SentenceTransformer(EMBEDDING_MODEL)
         print("  ✓ Model loaded")
     return _MODEL
 
@@ -40,13 +38,16 @@ def _pick_best_title(articles: list[dict]) -> str:
     for article in articles:
         title = article.get("title", "")
         cred = article.get("credibility_score", 50)
+        lang = article.get("language", "en")
         length = len(title)
         length_score = 1.0
         if length < 20:
             length_score = 0.5
         elif length > 120:
             length_score = 0.7
-        scored.append((cred * length_score, title))
+        # Prefer English titles for readability in API responses
+        lang_score = 1.0 if lang == "en" else 0.85
+        scored.append((cred * length_score * lang_score, title))
     scored.sort(reverse=True)
     return scored[0][1]
 
@@ -54,15 +55,15 @@ def _pick_best_title(articles: list[dict]) -> str:
 def cluster_articles(hours: int = CLUSTER_WINDOW_HOURS) -> list[dict]:
     """
     Main clustering function.
-    Fetches recent articles, embeds them with MiniLM, groups by cosine similarity.
+    Fetches recent articles, embeds with multilingual MiniLM,
+    groups by cosine similarity. Supports Hindi + English cross-clustering.
     """
     articles = _fetch_recent_articles(hours)
     if len(articles) < 2:
         return [_single_article_cluster(a) for a in articles]
 
-    print(f"\n🧩 Clustering {len(articles)} articles (semantic embeddings)...")
+    print(f"\n🧩 Clustering {len(articles)} articles (multilingual embeddings)...")
 
-    # Build text inputs: title + summary
     texts = []
     for article in articles:
         text = article.get("title", "")
@@ -71,19 +72,15 @@ def cluster_articles(hours: int = CLUSTER_WINDOW_HOURS) -> list[dict]:
             text += " " + summary
         texts.append(text)
 
-    # Encode all texts to dense vectors
     model = get_model()
     embeddings = model.encode(texts, convert_to_numpy=True, show_progress_bar=False)
 
-    # Normalise for cosine similarity via dot product
     norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
-    norms = np.where(norms == 0, 1, norms)  # avoid div-by-zero
+    norms = np.where(norms == 0, 1, norms)
     embeddings = embeddings / norms
 
-    # Compute full pairwise similarity matrix
     similarity_matrix = embeddings @ embeddings.T
 
-    # Greedy clustering
     n = len(articles)
     assigned = [False] * n
     clusters = []

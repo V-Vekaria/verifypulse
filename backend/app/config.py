@@ -4,14 +4,6 @@ All news sources, credibility scores, and settings in one place.
 """
 
 # ─── NEWS SOURCES ───────────────────────────────────────────────
-# Each source has: name, type, url, region, credibility_score (0-100)
-#
-# Credibility scoring rationale:
-#   90-100: Major wire services with strict editorial standards
-#   80-89:  Major international broadcasters with editorial oversight
-#   70-79:  Reputable national/regional outlets
-#   Below 70: Added in Phase 2 with more verification layers
-
 RSS_SOURCES = [
     {
         "id": "reuters",
@@ -53,6 +45,25 @@ RSS_SOURCES = [
         "credibility_score": 78,
         "type": "national",
     },
+    # ── Day 5: Hindi sources ─────────────────────────────────────
+    {
+        "id": "ndtv_hindi",
+        "name": "NDTV Hindi",
+        "url": "https://feeds.feedburner.com/ndtvkhabar-latest",
+        "region": "india",
+        "credibility_score": 75,
+        "type": "national",
+        "language": "hi",
+    },
+    {
+        "id": "aaj_tak",
+        "name": "Aaj Tak",
+        "url": "https://aajtak.intoday.in/rss/homepage.xml",
+        "region": "india",
+        "credibility_score": 72,
+        "type": "national",
+        "language": "hi",
+    },
 ]
 
 # ─── GDELT SETTINGS ─────────────────────────────────────────────
@@ -62,7 +73,7 @@ GDELT_DEFAULT_PARAMS = {
     "mode": "ArtList",
     "format": "json",
     "maxrecords": 50,
-    "timespan": "60min",  # last 60 minutes
+    "timespan": "60min",
 }
 
 # ─── REGION MAPPING ─────────────────────────────────────────────
@@ -73,22 +84,25 @@ REGIONS = {
     "americas": "Americas",
 }
 
-# Region keywords for GDELT queries
 REGION_QUERIES = {
     "india": "India OR Delhi OR Mumbai OR Modi",
     "east_asia": "China OR Japan OR Korea OR Tokyo OR Beijing",
     "americas": "United States OR Washington OR Congress OR Biden",
-    "global": "",  # no filter = global
+    "global": "",
 }
 
 # ─── APP SETTINGS ───────────────────────────────────────────────
-FETCH_INTERVAL_MINUTES = 15  # how often to pull new articles
+FETCH_INTERVAL_MINUTES = 15
 DATABASE_PATH = "verifypulse.db"
 MAX_ARTICLES_PER_FETCH = 100
 
 # ─── CLUSTERING SETTINGS ────────────────────────────────────────
-# Semantic similarity threshold for MiniLM embeddings
-# 0.55 = balanced (misses fewer related stories)
-# 0.65 = stricter (fewer false positives)
+# Multilingual MiniLM supports 50+ languages including Hindi
+# Same threshold works for cross-language clustering
 CLUSTER_SIMILARITY_THRESHOLD = 0.55
 CLUSTER_WINDOW_HOURS = 48
+
+# ─── EMBEDDING MODEL ────────────────────────────────────────────
+# Day 5: swapped to multilingual model
+# paraphrase-multilingual-MiniLM-L12-v2 supports Hindi + English cross-clustering
+EMBEDDING_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
