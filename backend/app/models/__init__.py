@@ -38,6 +38,7 @@ class StoryCluster(BaseModel):
     regions: list[str] = []
     first_reported: Optional[datetime] = None
     last_updated: Optional[datetime] = None
+    claims: Optional[list[str]] = None  # Claude-extracted factual claims
 
 
 class HealthResponse(BaseModel):
@@ -47,3 +48,13 @@ class HealthResponse(BaseModel):
     total_articles: int = 0
     total_sources: int = 0
     last_fetch: Optional[str] = None
+
+
+class ClaimsResponse(BaseModel):
+    """Response model for the /claims endpoint."""
+
+    cluster_id: str
+    title: str
+    claims: list[str] = []
+    claim_count: int = 0
+    source_article: Optional[str] = None
