@@ -1,10 +1,12 @@
 """
 RSS Feed Parser Service
 Fetches and parses articles from configured RSS news sources.
+Day 5: added language detection per article.
 """
 
 import feedparser
 import hashlib
+import re
 from datetime import datetime
 from dateutil import parser as date_parser
 from typing import Optional
@@ -14,12 +16,10 @@ from app.models import Article
 
 
 def _generate_article_id(url: str) -> str:
-    """Create a unique ID from the article URL."""
     return hashlib.md5(url.encode()).hexdigest()[:12]
 
 
 def _parse_date(date_str: Optional[str]) -> Optional[datetime]:
-    """Safely parse various date formats from RSS feeds."""
     if not date_str:
         return None
     try:
@@ -29,28 +29,34 @@ def _parse_date(date_str: Optional[str]) -> Optional[datetime]:
 
 
 def _clean_summary(summary: Optional[str]) -> Optional[str]:
-    """Remove HTML tags from summary text."""
     if not summary:
         return None
-    import re
-
     clean = re.sub(r"<[^>]+>", "", summary)
     clean = clean.strip()
-    # Truncate to 500 chars
     return clean[:500] if len(clean) > 500 else clean
 
 
+def _detect_language(text: str) -> str:
+    """
+    Lightweight language detection — checks for Hindi Unicode range.
+    Returns 'hi' for Hindi, 'en' for everything else.
+    No external dependency needed for basic Hindi detection.
+    """
+    if not text:
+        return "en"
+    # Devanagari Unicode block: U+0900–U+097F
+    hindi_chars = sum(1 for c in text if "\u0900" <= c <= "\u097F")
+    # If >10% of chars are Devanagari, classify as Hindi
+    if len(text) > 0 and hindi_chars / len(text) > 0.1:
+        return "hi"
+    return "en"
+
+
 def fetch_single_source(source: dict) -> list[Article]:
-    """
-    Fetch articles from a single RSS source.
-
-    Args:
-        source: Source config dict from RSS_SOURCES
-
-    Returns:
-        List of Article objects
-    """
+    """Fetch articles from a single RSS source."""
     articles = []
+    # Use source-level language if defined, otherwise auto-detect
+    source_language = source.get("language", None)
 
     try:
         feed = feedparser.parse(source["url"])
@@ -59,25 +65,32 @@ def fetch_single_source(source: dict) -> list[Article]:
             print(f"  ⚠ Feed error for {source['name']}: {feed.bozo_exception}")
             return articles
 
-        for entry in feed.entries[:20]:  # max 20 per source
+        for entry in feed.entries[:20]:
             url = entry.get("link", "")
             if not url:
                 continue
 
+            title = entry.get("title", "Untitled")
+            summary = _clean_summary(
+                entry.get("summary") or entry.get("description")
+            )
+
+            # Detect language from title if source doesn't declare one
+            lang = source_language or _detect_language(title)
+
             article = Article(
                 id=_generate_article_id(url),
-                title=entry.get("title", "Untitled"),
+                title=title,
                 url=url,
                 source_id=source["id"],
                 source_name=source["name"],
                 published_at=_parse_date(
                     entry.get("published") or entry.get("updated")
                 ),
-                summary=_clean_summary(
-                    entry.get("summary") or entry.get("description")
-                ),
+                summary=summary,
                 region=source["region"],
                 credibility_score=source["credibility_score"],
+                language=lang,
             )
             articles.append(article)
 
@@ -90,12 +103,7 @@ def fetch_single_source(source: dict) -> list[Article]:
 
 
 def fetch_all_rss() -> list[Article]:
-    """
-    Fetch articles from ALL configured RSS sources.
-
-    Returns:
-        Combined list of articles from all sources.
-    """
+    """Fetch articles from ALL configured RSS sources."""
     print("\n📡 Fetching RSS feeds...")
     all_articles = []
 

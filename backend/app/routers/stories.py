@@ -8,6 +8,7 @@ from fastapi import APIRouter, Query, HTTPException
 from app.services.clustering import cluster_articles, save_cluster_assignments
 from app.services.confidence import score_all_clusters, CONFIDENCE_LEVELS
 from app.services.claim_extractor import extract_claims_for_cluster
+from app.services.database import get_story_timeline, save_snapshots_for_clusters
 
 router = APIRouter(prefix="/api", tags=["stories"])
 
@@ -48,6 +49,7 @@ def list_stories(
 
     if scored:
         save_cluster_assignments(scored)
+        save_snapshots_for_clusters(scored)  # record timeline snapshot
 
     return {
         "count": len(scored),
@@ -109,6 +111,34 @@ def get_story_claims(cluster_id: str, hours: int = 48):
         "claims": claims,
         "claim_count": len(claims),
         "source_article": target["articles"][0]["title"] if target["articles"] else None,
+    }
+
+
+@router.get("/stories/{cluster_id}/timeline")
+def get_story_timeline_endpoint(cluster_id: str):
+    """
+    **Story timeline** — returns confidence score history for a cluster over time.
+
+    Shows how a story's trustworthiness evolved as more sources picked it up.
+    Each point represents one fetch cycle.
+
+    Use this to power a confidence-over-time chart on the frontend.
+    """
+    snapshots = get_story_timeline(cluster_id)
+
+    if not snapshots:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No timeline found for cluster_id: {cluster_id}. Story may be too new."
+        )
+
+    return {
+        "cluster_id": cluster_id,
+        "snapshot_count": len(snapshots),
+        "first_seen": snapshots[0]["snapshot_at"] if snapshots else None,
+        "last_seen": snapshots[-1]["snapshot_at"] if snapshots else None,
+        "current_confidence": snapshots[-1]["confidence_score"] if snapshots else None,
+        "timeline": snapshots,
     }
 
 
