@@ -53,7 +53,7 @@ def fetch_gdelt(
     Returns:
         List of Article objects
     """
-    print(f"\n🌍 Fetching GDELT articles...")
+    print(f"\n[GDELT] Fetching GDELT articles...")
 
     # Build query
     search_query = query
@@ -105,14 +105,14 @@ def fetch_gdelt(
             )
             articles.append(article)
 
-        print(f"  ✓ GDELT: {len(articles)} articles")
+        print(f"  [OK] GDELT: {len(articles)} articles")
 
     except requests.exceptions.Timeout:
-        print("  ✗ GDELT: Request timed out (15s)")
+        print("  [ERR] GDELT: Request timed out (15s)")
     except requests.exceptions.RequestException as e:
-        print(f"  ✗ GDELT request failed: {e}")
+        print(f"  [ERR] GDELT request failed: {e}")
     except (ValueError, KeyError) as e:
-        print(f"  ✗ GDELT parse error: {e}")
+        print(f"  [ERR] GDELT parse error: {e}")
 
     return articles
 

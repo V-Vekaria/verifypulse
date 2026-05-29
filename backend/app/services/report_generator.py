@@ -107,7 +107,7 @@ def _generate_markdown_summary(stories: list[dict]) -> str:
         return response.json()["content"][0]["text"]
 
     except Exception as e:
-        print(f"  ⚠ Report generation failed: {e}, using fallback")
+        print(f"  [WARN] Report generation failed: {e}, using fallback")
         return _fallback_markdown(stories)
 
 

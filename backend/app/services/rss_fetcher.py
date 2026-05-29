@@ -4,12 +4,16 @@ Fetches and parses articles from configured RSS news sources.
 Day 5: added language detection per article.
 """
 
+import socket
 import feedparser
 import hashlib
 import re
 from datetime import datetime
 from dateutil import parser as date_parser
 from typing import Optional
+
+# feedparser has no built-in timeout — set a global socket timeout for feed fetches
+_FEED_TIMEOUT = 10  # seconds
 
 from app.config import RSS_SOURCES
 from app.models import Article
@@ -59,10 +63,15 @@ def fetch_single_source(source: dict) -> list[Article]:
     source_language = source.get("language", None)
 
     try:
-        feed = feedparser.parse(source["url"])
+        old_timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(_FEED_TIMEOUT)
+        try:
+            feed = feedparser.parse(source["url"])
+        finally:
+            socket.setdefaulttimeout(old_timeout)
 
         if feed.bozo and not feed.entries:
-            print(f"  ⚠ Feed error for {source['name']}: {feed.bozo_exception}")
+            print(f"  [WARN] Feed error for {source['name']}: {feed.bozo_exception}")
             return articles
 
         for entry in feed.entries[:20]:
@@ -94,17 +103,17 @@ def fetch_single_source(source: dict) -> list[Article]:
             )
             articles.append(article)
 
-        print(f"  ✓ {source['name']}: {len(articles)} articles")
+        print(f"  [OK] {source['name']}: {len(articles)} articles")
 
     except Exception as e:
-        print(f"  ✗ {source['name']} failed: {e}")
+        print(f"  [ERR] {source['name']} failed: {e}")
 
     return articles
 
 
 def fetch_all_rss() -> list[Article]:
     """Fetch articles from ALL configured RSS sources."""
-    print("\n📡 Fetching RSS feeds...")
+    print("\n[RSS] Fetching RSS feeds...")
     all_articles = []
 
     for source in RSS_SOURCES:
