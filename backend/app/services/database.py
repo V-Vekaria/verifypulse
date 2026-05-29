@@ -64,6 +64,7 @@ def init_database():
                 credibility_score INTEGER DEFAULT 50,
                 fetched_at TEXT DEFAULT (datetime('now')),
                 cluster_id TEXT,
+                language TEXT DEFAULT 'en',
                 FOREIGN KEY (source_id) REFERENCES sources(id)
             );
 
@@ -104,10 +105,16 @@ def init_database():
                 ON story_snapshots(snapshot_at DESC);
         """)
 
+        # Migrate: add language column if it doesn't exist (safe to re-run)
+        try:
+            conn.execute("ALTER TABLE articles ADD COLUMN language TEXT DEFAULT 'en'")
+        except Exception:
+            pass  # column already exists
+
         # Seed source credibility table from config
         _seed_sources(conn)
 
-    print("  ✓ Database initialized")
+    print("  [OK] Database initialized")
 
 
 def _seed_sources(conn: sqlite3.Connection):
@@ -155,8 +162,8 @@ def insert_articles(articles: list[dict]) -> dict:
                 conn.execute("""
                     INSERT INTO articles
                         (id, title, url, source_id, source_name,
-                         published_at, summary, region, credibility_score, fetched_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         published_at, summary, region, credibility_score, fetched_at, language)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     article.get("id"),
                     article.get("title"),
@@ -168,6 +175,7 @@ def insert_articles(articles: list[dict]) -> dict:
                     article.get("region", "global"),
                     article.get("credibility_score", 50),
                     _format_dt(article.get("fetched_at")),
+                    article.get("language", "en"),
                 ))
                 new_count += 1
             except sqlite3.IntegrityError:
@@ -320,7 +328,7 @@ def save_snapshots_for_clusters(clusters: list[dict]):
             article_count=len(cluster.get("articles", [])),
             source_count=cluster.get("source_count", 0),
         )
-    print(f"  📸 Saved {len(clusters)} story snapshots")
+    print(f"  [DB] Saved {len(clusters)} story snapshots")
 
 
 # ─── HELPERS ────────────────────────────────────────────────────
