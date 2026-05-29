@@ -40,7 +40,7 @@ def extract_claims(article_text: str, article_title: str = "") -> list[str]:
     """
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
-        print("  ⚠️  ANTHROPIC_API_KEY not set — skipping claim extraction")
+        print("  [WARN] ANTHROPIC_API_KEY not set — skipping claim extraction")
         return []
 
     text = f"Headline: {article_title}\n\n{article_text}" if article_title else article_text
@@ -86,13 +86,13 @@ def extract_claims(article_text: str, article_title: str = "") -> list[str]:
         return []
 
     except httpx.HTTPStatusError as e:
-        print(f"  ✗ Claude API HTTP error: {e.response.status_code}")
+        print(f"  [ERR] Claude API HTTP error: {e.response.status_code}")
         return []
     except json.JSONDecodeError as e:
-        print(f"  ✗ Failed to parse claims JSON: {e}")
+        print(f"  [ERR] Failed to parse claims JSON: {e}")
         return []
     except Exception as e:
-        print(f"  ✗ Claim extraction failed: {e}")
+        print(f"  [ERR] Claim extraction failed: {e}")
         return []
 
 
@@ -120,7 +120,7 @@ def extract_claims_for_cluster(cluster: dict) -> list[str]:
         return []
 
     text = summary or title
-    print(f"  🔍 Extracting claims from: {title[:60]}...")
+    print(f"  [>>] Extracting claims from: {title[:60]}...")
     claims = extract_claims(text, title)
-    print(f"  ✓ Found {len(claims)} claims")
+    print(f"  [OK] Found {len(claims)} claims")
     return claims

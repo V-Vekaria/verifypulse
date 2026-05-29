@@ -20,9 +20,9 @@ def get_model() -> SentenceTransformer:
     """Return the singleton embedding model, loading it if needed."""
     global _MODEL
     if _MODEL is None:
-        print(f"  📦 Loading embedding model: {EMBEDDING_MODEL} (first run only)...")
+        print(f"  [*] Loading embedding model: {EMBEDDING_MODEL} (first run only)...")
         _MODEL = SentenceTransformer(EMBEDDING_MODEL)
-        print("  ✓ Model loaded")
+        print("  [OK] Model loaded")
     return _MODEL
 
 
@@ -62,7 +62,7 @@ def cluster_articles(hours: int = CLUSTER_WINDOW_HOURS) -> list[dict]:
     if len(articles) < 2:
         return [_single_article_cluster(a) for a in articles]
 
-    print(f"\n🧩 Clustering {len(articles)} articles (multilingual embeddings)...")
+    print(f"\n[>>] Clustering {len(articles)} articles (multilingual embeddings)...")
 
     texts = []
     for article in articles:
@@ -99,9 +99,9 @@ def cluster_articles(hours: int = CLUSTER_WINDOW_HOURS) -> list[dict]:
 
     clusters.sort(key=lambda c: c["source_count"], reverse=True)
 
-    print(f"  ✓ Created {len(clusters)} story clusters")
+    print(f"  [OK] Created {len(clusters)} story clusters")
     if clusters:
-        print(f"  📊 Largest cluster: {clusters[0]['source_count']} sources")
+        print(f"  [>>] Largest cluster: {clusters[0]['source_count']} sources")
 
     return clusters
 
@@ -110,7 +110,8 @@ def _fetch_recent_articles(hours: int) -> list[dict]:
     with get_db() as conn:
         rows = conn.execute("""
             SELECT id, title, url, source_id, source_name,
-                   published_at, summary, region, credibility_score, fetched_at
+                   published_at, summary, region, credibility_score, fetched_at,
+                   COALESCE(language, 'en') AS language
             FROM articles
             WHERE fetched_at >= datetime('now', ?)
             ORDER BY published_at DESC
@@ -158,4 +159,4 @@ def save_cluster_assignments(clusters: list[dict]):
                         "UPDATE articles SET cluster_id = ? WHERE id = ?",
                         (cluster_id, article_id),
                     )
-    print(f"  💾 Saved cluster assignments for {len(clusters)} clusters")
+    print(f"  [DB] Saved cluster assignments for {len(clusters)} clusters")
