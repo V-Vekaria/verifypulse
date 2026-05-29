@@ -5,8 +5,17 @@ Real-time news verification dashboard.
 Run with: uvicorn app.main:app --reload
 """
 
+import sys
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf-8-sig"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+import os
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from app.routers import stories, data
 from app.services.database import init_database
@@ -52,8 +61,12 @@ app.include_router(data.router)
 
 
 # ─── ROOT & HEALTH ─────────────────────────────────────────────
-@app.get("/", tags=["health"])
+@app.get("/", tags=["health"], include_in_schema=False)
 def root():
+    """Serve the frontend dashboard."""
+    frontend_path = Path(__file__).parent.parent.parent / "frontend" / "index.html"
+    if frontend_path.exists():
+        return FileResponse(str(frontend_path))
     return {
         "app": "VerifyPulse",
         "version": "0.4.0",

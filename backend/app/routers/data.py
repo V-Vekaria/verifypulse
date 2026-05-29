@@ -3,8 +3,9 @@ VerifyPulse API Router — Data
 Articles, sources, stats, fetch, and report endpoints.
 """
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel
 from datetime import datetime
 
 from app.services.rss_fetcher import fetch_all_rss
@@ -22,6 +23,7 @@ from app.services.dedup import deduplicate_articles, get_existing_titles_from_db
 from app.services.clustering import cluster_articles
 from app.services.confidence import score_all_clusters
 from app.services.report_generator import generate_daily_report
+from app.services.translator import translate_texts, SUPPORTED_LANGUAGES
 
 router = APIRouter(prefix="/api", tags=["data"])
 
@@ -131,3 +133,56 @@ def get_daily_report(format: str = Query("json", description="Response format: j
         )
 
     return report
+
+
+# ─── TRANSLATION ────────────────────────────────────────
+
+class TranslateRequest(BaseModel):
+    texts: list[str]
+    target_lang: str
+
+
+@router.post("/translate", tags=["data"])
+def translate(body: TranslateRequest):
+    """
+    **Batch translation** — translates a list of text strings (story titles, summaries)
+    into the requested language using Claude.
+
+    Supported language codes: hi (Hindi), gu (Gujarati), ko (Korean), ar (Arabic),
+    fr (French), es (Spanish), de (German), ja (Japanese), zh (Chinese), pt (Portuguese),
+    ru (Russian), ta (Tamil), te (Telugu), bn (Bengali), mr (Marathi).
+
+    Returns the same list in translated form. Falls back gracefully to originals
+    if ANTHROPIC_API_KEY is not set.
+    """
+    import os
+    if body.target_lang not in SUPPORTED_LANGUAGES:
+        raise HTTPException(status_code=400, detail=f"Unsupported language: {body.target_lang}. Supported: {list(SUPPORTED_LANGUAGES.keys())}")
+
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        return {
+            "translations": body.texts,
+            "target_lang": body.target_lang,
+            "translated": False,
+            "reason": "ANTHROPIC_API_KEY not set",
+        }
+
+    translated = translate_texts(body.texts, body.target_lang)
+    return {
+        "translations": translated,
+        "target_lang": body.target_lang,
+        "language_name": SUPPORTED_LANGUAGES[body.target_lang],
+        "translated": True,
+        "count": len(translated),
+    }
+
+
+@router.get("/languages", tags=["data"])
+def list_languages():
+    """Returns all supported translation languages."""
+    return {
+        "languages": [
+            {"code": code, "name": name}
+            for code, name in SUPPORTED_LANGUAGES.items()
+        ]
+    }
